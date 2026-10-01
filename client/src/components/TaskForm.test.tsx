@@ -1,0 +1,63 @@
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
+import type { SpeechService } from '../lib/speech';
+import { TaskForm, validateTask, emptyFields } from './TaskForm';
+
+const noSpeech: SpeechService = { support: () => 'none', permission: async () => 'unknown', start: vi.fn() };
+
+describe('TaskForm', () => {
+  it('requires a title and shows an accessible error', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<TaskForm categories={[]} submitLabel="Add task" onSubmit={onSubmit} />);
+    await user.click(screen.getByRole('button', { name: 'Add task' }));
+    const title = screen.getByLabelText(/title/i);
+    expect(title).toHaveAttribute('aria-invalid', 'true');
+    expect(title).toHaveAccessibleDescription('Please enter a title.');
+    expect(title).toHaveFocus();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('submits all fields', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<TaskForm categories={['Work']} submitLabel="Add task" onSubmit={onSubmit} />);
+    await user.type(screen.getByLabelText(/title/i), 'Ship release');
+    await user.type(screen.getByLabelText(/description/i), 'v1.0');
+    await user.type(screen.getByLabelText(/due date/i), '2026-12-24');
+    await user.selectOptions(screen.getByLabelText(/priority/i), 'high');
+    await user.type(screen.getByLabelText(/category/i), 'Work');
+    await user.click(screen.getByRole('button', { name: 'Add task' }));
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: 'Ship release',
+      description: 'v1.0',
+      dueDate: '2026-12-24',
+      priority: 'high',
+      category: 'Work',
+      completed: false,
+    });
+  });
+
+  it('shows a helpful message when saving fails', async () => {
+    const user = userEvent.setup();
+    render(
+      <TaskForm categories={[]} submitLabel="Save" onSubmit={vi.fn().mockRejectedValue(new Error('Disk is full'))} />,
+    );
+    await user.type(screen.getByLabelText(/title/i), 'x');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Disk is full');
+  });
+
+  it('falls back to typing when voice is unavailable', () => {
+    render(<TaskForm voice speech={noSpeech} categories={[]} submitLabel="Add" onSubmit={vi.fn()} />);
+    expect(screen.getByText(/voice input isn't available/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/title/i)).toBeEnabled();
+  });
+
+  it('validates lengths', () => {
+    expect(validateTask({ ...emptyFields, title: 'a'.repeat(201) }).title).toMatch(/200/);
+    expect(validateTask({ ...emptyFields, title: 'ok', category: 'c'.repeat(51) }).category).toMatch(/50/);
+    expect(validateTask({ ...emptyFields, title: 'ok' })).toEqual({});
+  });
+});

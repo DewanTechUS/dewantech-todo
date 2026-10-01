@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/dist
+client/android
+client/ios
+server/.data
+.env
+**/.env
+**/.env.*
+!**/.env.example
