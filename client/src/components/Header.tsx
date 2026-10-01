@@ -4,7 +4,9 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDialog } from '../hooks/useDialog';
 import { DEWANTECH_SITE_URL } from './Footer';
-import { CloseIcon, LogoMark, MenuIcon } from './Icons';
+import { useTasks } from '../context/TasksContext';
+import { CloseIcon, CloudIcon, CloudOffIcon, LogoMark, MenuIcon } from './Icons';
+import { Spinner } from './Spinner';
 import { SyncIndicator } from './SyncIndicator';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -30,7 +32,7 @@ export function Header() {
 
   // The menu is phone-only; close it if the window grows to desktop width.
   useEffect(() => {
-    const mq = window.matchMedia?.('(min-width: 768px)');
+    const mq = window.matchMedia?.('(min-width: 1024px)');
     if (!mq) return;
     const onChange = () => mq.matches && setOpen(false);
     mq.addEventListener('change', onChange);
@@ -58,23 +60,27 @@ export function Header() {
           </span>
         </Link>
 
-        {status === 'authenticated' && <SyncIndicator />}
+        {status === 'authenticated' && (
+          <div className="hidden lg:block">
+            <SyncIndicator />
+          </div>
+        )}
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={navClass}>
               {l.label}
             </NavLink>
           ))}
         </nav>
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <ThemeToggle />
         </div>
 
         <button
           ref={menuButton}
           type="button"
-          className="btn-ghost md:hidden"
+          className="btn-ghost lg:hidden"
           aria-expanded={open}
           aria-controls="mobile-menu"
           aria-label="Open menu"
@@ -90,7 +96,52 @@ export function Header() {
   );
 }
 
-const sectionTitle = 'px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500';
+/** Sync status for the menu (the top-bar cloud icon is desktop-only). */
+function MenuSyncStatus() {
+  const { store, sync } = useTasks();
+  if (!store) return null;
+  const busy = sync.status === 'syncing';
+  const label =
+    sync.status === 'syncing'
+      ? 'Syncing…'
+      : sync.status === 'offline'
+        ? sync.pending
+          ? `Offline · ${sync.pending} change${sync.pending > 1 ? 's' : ''} waiting`
+          : 'Offline'
+        : sync.status === 'error'
+          ? 'Sync problem'
+          : sync.pending
+            ? `${sync.pending} change${sync.pending > 1 ? 's' : ''} to sync`
+            : 'All changes synced';
+  const tone =
+    sync.status === 'offline'
+      ? 'text-amber-700 dark:text-amber-400'
+      : sync.status === 'error'
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-slate-600 dark:text-slate-300';
+
+  return (
+    <div>
+      <p className={sectionTitle}>Sync</p>
+      <div className="flex items-center justify-between gap-2 px-3">
+        <span className={`flex items-center gap-2 text-sm ${tone}`} aria-live="polite">
+          {busy ? <Spinner className="h-4 w-4" label="Syncing" /> : sync.status === 'offline' || sync.status === 'error' ? <CloudOffIcon /> : <CloudIcon />}
+          {label}
+        </span>
+        <button type="button" className="btn-secondary min-h-[40px] px-3 text-sm" disabled={busy} onClick={() => void store.syncNow()}>
+          Sync now
+        </button>
+      </div>
+      {sync.lastSyncedAt && (
+        <p className="px-3 pt-1 text-xs text-slate-500 dark:text-slate-400">
+          Last synced {new Date(sync.lastSyncedAt).toLocaleString()}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const sectionTitle ='px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500';
 
 /** Phone menu: header navigation, settings and the footer's links in one slide-in panel. */
 function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void }) {
@@ -99,7 +150,7 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
   useDialog(panel, onClose, 'a[href], button:not([data-close])');
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden">
+    <div className="fixed inset-0 z-50 lg:hidden">
       <div className="absolute inset-0 bg-slate-900/60" onClick={onClose} aria-hidden />
       <div
         ref={panel}
@@ -127,6 +178,8 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
               <p className="break-all text-sm text-slate-500 dark:text-slate-400">{user.email}</p>
             </div>
           )}
+
+          {user && <MenuSyncStatus />}
 
           <nav aria-label="Mobile">
             <p className={sectionTitle}>Menu</p>
