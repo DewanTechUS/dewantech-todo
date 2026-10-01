@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { SpeechError, type MicPermission, type SpeechHandlers, type SpeechService, type SpeechSupport } from '../lib/speech';
 import { KEYS } from '../lib/storage';
-import { VoiceInput } from './VoiceInput';
+import { TaskForm } from './TaskForm';
 
 function fakeSpeech(opts: { support?: SpeechSupport; permission?: MicPermission } = {}) {
   let handlers: SpeechHandlers | null = null;
@@ -25,85 +25,138 @@ function fakeSpeech(opts: { support?: SpeechSupport; permission?: MicPermission 
   };
 }
 
-describe('VoiceInput', () => {
-  it('shows a typing fallback when speech recognition is unavailable', () => {
-    render(<VoiceInput onUse={vi.fn()} speech={fakeSpeech({ support: 'none' }).service} />);
-    expect(screen.queryByRole('button', { name: /voice/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/isn't available in this browser\. Type your task/i)).toBeInTheDocument();
+function renderComposer(speech: SpeechService) {
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
+  render(<TaskForm voice speech={speech} categories={[]} submitLabel="Add task" onSubmit={onSubmit} />);
+  return { onSubmit, box: screen.getByRole('textbox', { name: 'Task' }), send: screen.getByRole('button', { name: 'Add task' }) };
+}
+
+const skipExplainer = () => localStorage.setItem(KEYS.micExplained, 'true');
+
+describe('Voice composer', () => {
+  it('types the words into the box live while you speak, and the arrow adds the task', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    const { onSubmit, box, send } = renderComposer(speech.service);
+    expect(send).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Stop listening' })).toHaveAttribute('aria-pressed', 'true'));
+
+    speech.say('buy milk');
+    await waitFor(() => expect(box).toHaveValue('buy milk'));
+    speech.say('buy milk and eggs');
+    await waitFor(() => expect(box).toHaveValue('buy milk and eggs'));
+    expect(onSubmit).not.toHaveBeenCalled(); // nothing is saved until the arrow
+
+    await user.click(send);
+    expect(speech.stop).toHaveBeenCalled();
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'buy milk and eggs' }));
+  });
+
+  it('ignores late speech results after the arrow is pressed', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    speech.stop.mockImplementation(() => undefined); // engine keeps sending results briefly
+    const { onSubmit, box, send } = renderComposer(speech.service);
+
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
+    speech.say('call mom');
+    await waitFor(() => expect(box).toHaveValue('call mom'));
+    await user.click(send);
+    speech.say('call mom something else');
+    expect(box).toHaveValue('call mom');
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'call mom' }));
+  });
+
+  it('adds to text that is already in the box, and lets you edit before sending', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    const { onSubmit, box } = renderComposer(speech.service);
+
+    await user.type(box, 'Call');
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
+    speech.say('mum tomorow');
+    await waitFor(() => expect(box).toHaveValue('Call mum tomorow'));
+
+    // Typing while listening stops the mic so speech can't overwrite the correction.
+    await user.type(box, '{Backspace}{Backspace}row');
+    expect(speech.stop).toHaveBeenCalled();
+    speech.say('ignored');
+    expect(box).toHaveValue('Call mum tomorrow');
+
+    await user.type(box, '{Enter}');
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Call mum tomorrow' }));
+  });
+
+  it('still works as a typing box when voice is unavailable', async () => {
+    const user = userEvent.setup();
+    const { onSubmit, box } = renderComposer(fakeSpeech({ support: 'none' }).service);
+    expect(screen.queryByRole('button', { name: 'Speak your task' })).not.toBeInTheDocument();
+    expect(screen.getByText(/voice isn't available in this browser/i)).toBeInTheDocument();
+    await user.type(box, 'Typed task{Enter}');
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Typed task' }));
   });
 
   it('explains microphone use before the first permission prompt', async () => {
     const user = userEvent.setup();
     const speech = fakeSpeech({ permission: 'prompt' });
-    const onTypeInstead = vi.fn();
-    render(<VoiceInput onUse={vi.fn()} onTypeInstead={onTypeInstead} speech={speech.service} />);
+    const { box } = renderComposer(speech.service);
 
-    await user.click(screen.getByRole('button', { name: 'Add task by voice' }));
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
     expect(screen.getByText('Allow microphone access?')).toBeInTheDocument();
     expect(speech.service.start).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('button', { name: 'Type instead' }));
-    expect(onTypeInstead).toHaveBeenCalled();
+    expect(box).toHaveFocus();
     expect(speech.service.start).not.toHaveBeenCalled();
   });
 
-  it('records speech into an editable preview and only uses it after confirmation', async () => {
-    localStorage.setItem(KEYS.micExplained, 'true');
-    const user = userEvent.setup();
-    const speech = fakeSpeech();
-    const onUse = vi.fn();
-    render(<VoiceInput onUse={onUse} speech={speech.service} />);
-
-    await user.click(screen.getByRole('button', { name: 'Add task by voice' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Stop voice input' })).toHaveAttribute('aria-pressed', 'true'));
-
-    speech.say('buy milk tomorow');
-    await screen.findByText('“buy milk tomorow”');
-    await user.click(screen.getByRole('button', { name: 'Stop voice input' }));
-
-    const preview = await screen.findByLabelText(/review what we heard/i);
-    expect(preview).toHaveValue('buy milk tomorow');
-    expect(onUse).not.toHaveBeenCalled();
-
-    await user.clear(preview);
-    await user.type(preview, 'Buy milk tomorrow');
-    await user.click(screen.getByRole('button', { name: 'Use this text' }));
-    expect(onUse).toHaveBeenCalledWith('Buy milk tomorrow');
-  });
-
   it('shows clear guidance when microphone permission is denied', async () => {
-    localStorage.setItem(KEYS.micExplained, 'true');
+    skipExplainer();
     const user = userEvent.setup();
     const speech = fakeSpeech();
-    render(<VoiceInput onUse={vi.fn()} onTypeInstead={vi.fn()} speech={speech.service} />);
-
-    await user.click(screen.getByRole('button', { name: 'Add task by voice' }));
+    renderComposer(speech.service);
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
     await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
     speech.fail('permission-denied');
     speech.end();
-
-    const alert = await screen.findByRole('status');
-    expect(alert).toHaveTextContent(/microphone access was blocked/i);
-    expect(screen.getByRole('button', { name: 'Type your task' })).toBeInTheDocument();
+    expect(await screen.findByText(/microphone access was blocked/i)).toBeInTheDocument();
   });
 
   it('does not start when the browser already reports the permission as denied', async () => {
     const user = userEvent.setup();
     const speech = fakeSpeech({ permission: 'denied' });
-    render(<VoiceInput onUse={vi.fn()} speech={speech.service} />);
-    await user.click(screen.getByRole('button', { name: 'Add task by voice' }));
+    renderComposer(speech.service);
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
     expect(await screen.findByText(/microphone access was blocked/i)).toBeInTheDocument();
     expect(speech.service.start).not.toHaveBeenCalled();
   });
 
-  it("tells the user when nothing was heard", async () => {
-    localStorage.setItem(KEYS.micExplained, 'true');
+  it('tells the user when nothing was heard', async () => {
+    skipExplainer();
     const user = userEvent.setup();
     const speech = fakeSpeech();
-    render(<VoiceInput onUse={vi.fn()} speech={speech.service} />);
-    await user.click(screen.getByRole('button', { name: 'Add task by voice' }));
+    renderComposer(speech.service);
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
     await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
     speech.end();
     expect(await screen.findByText(/didn't hear anything/i)).toBeInTheDocument();
+  });
+
+  it('keeps optional details behind a toggle and includes them when sending', async () => {
+    const user = userEvent.setup();
+    const { onSubmit, box } = renderComposer(fakeSpeech().service);
+    expect(screen.queryByLabelText('Priority')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /add details/i }));
+    await user.selectOptions(screen.getByLabelText('Priority'), 'high');
+    await user.type(box, 'Pay rent{Enter}');
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pay rent', priority: 'high' }));
   });
 });

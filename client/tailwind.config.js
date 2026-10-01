@@ -18,6 +18,15 @@ export default {
           900: '#312e81',
         },
       },
+      keyframes: {
+        wave: {
+          '0%, 100%': { transform: 'scaleY(0.35)' },
+          '50%': { transform: 'scaleY(1)' },
+        },
+      },
+      animation: {
+        wave: 'wave 0.9s ease-in-out infinite',
+      },
       minHeight: { touch: '44px' },
       minWidth: { touch: '44px' },
     },

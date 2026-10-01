@@ -113,7 +113,9 @@ export const speechService: SpeechService = {
 
     const rec = new Ctor();
     rec.lang = lang;
-    rec.continuous = false;
+    // Keep listening through pauses until the user taps stop or send. Android Chrome repeats
+    // phrases in continuous mode, so there it stops after each phrase (tap the mic to add more).
+    rec.continuous = !/Android/i.test(navigator.userAgent);
     rec.interimResults = true;
     rec.maxAlternatives = 1;
     let ended = false;

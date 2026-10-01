@@ -30,7 +30,10 @@ interface TaskFormProps {
   submitLabel: string;
   onSubmit: (fields: TaskFields) => Promise<void>;
   onCancel?: () => void;
-  /** Show the voice input button (for new tasks). */
+  /**
+   * Voice composer mode (for new tasks): a centred mic and a chat-style box that fills in
+   * as you speak, with a send arrow. Other fields are tucked behind "Add details".
+   */
   voice?: boolean;
   speech?: SpeechService;
 }
@@ -40,7 +43,8 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
   const [errors, setErrors] = useState<Partial<Record<keyof TaskFields, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const titleRef = useRef<HTMLInputElement>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const titleRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const id = useId();
   const ids = {
     title: `${id}-title`,
@@ -49,6 +53,7 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
     priority: `${id}-priority`,
     category: `${id}-category`,
     categories: `${id}-categories`,
+    details: `${id}-details`,
   };
 
   const set = <K extends keyof TaskFields>(key: K, value: TaskFields[K]) => {
@@ -61,6 +66,7 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
     const v = validateTask(fields);
     setErrors(v);
     if (Object.keys(v).length) {
+      if (!v.title) setShowDetails(true); // the problem is in one of the detail fields
       titleRef.current?.focus();
       return;
     }
@@ -78,45 +84,48 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
   const errProps = (key: keyof TaskFields) =>
     errors[key] ? { 'aria-invalid': true as const, 'aria-describedby': `${id}-${key}-error` } : {};
 
-  return (
-    <form onSubmit={submit} noValidate className="space-y-4">
-      {voice && (
-        <VoiceInput
-          speech={speech}
-          onUse={(text) => {
-            set('title', text);
-            titleRef.current?.focus();
-          }}
-          onTypeInstead={() => titleRef.current?.focus()}
-        />
+  const titleField = voice ? (
+    <VoiceInput
+      ref={(el) => {
+        titleRef.current = el;
+      }}
+      inputId={ids.title}
+      value={fields.title}
+      onChange={(text) => set('title', text)}
+      error={errors.title}
+      submitting={saving}
+      speech={speech}
+    />
+  ) : (
+    <div>
+      <label htmlFor={ids.title} className="label">
+        Title <span aria-hidden className="text-red-600">*</span>
+      </label>
+      <input
+        id={ids.title}
+        ref={(el) => {
+          titleRef.current = el;
+        }}
+        className="input"
+        value={fields.title}
+        onChange={(e) => set('title', e.target.value)}
+        maxLength={200}
+        required
+        autoComplete="off"
+        enterKeyHint="done"
+        placeholder="What needs doing?"
+        {...errProps('title')}
+      />
+      {errors.title && (
+        <p id={`${id}-title-error`} className="field-error">
+          {errors.title}
+        </p>
       )}
+    </div>
+  );
 
-      {formError && <Alert onDismiss={() => setFormError(null)}>{formError}</Alert>}
-
-      <div>
-        <label htmlFor={ids.title} className="label">
-          Title <span aria-hidden className="text-red-600">*</span>
-        </label>
-        <input
-          id={ids.title}
-          ref={titleRef}
-          className="input"
-          value={fields.title}
-          onChange={(e) => set('title', e.target.value)}
-          maxLength={200}
-          required
-          autoComplete="off"
-          enterKeyHint="done"
-          placeholder="What needs doing?"
-          {...errProps('title')}
-        />
-        {errors.title && (
-          <p id={`${id}-title-error`} className="field-error">
-            {errors.title}
-          </p>
-        )}
-      </div>
-
+  const detailFields = (
+    <div id={ids.details} className="space-y-4">
       <div>
         <label htmlFor={ids.description} className="label">
           Description
@@ -199,18 +208,46 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
           )}
         </div>
       </div>
+    </div>
+  );
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        {onCancel && (
-          <button type="button" className="btn-secondary" onClick={onCancel}>
-            Cancel
-          </button>
-        )}
-        <button type="submit" className="btn-primary" disabled={saving}>
-          {saving && <Spinner label="Saving" className="h-4 w-4" />}
-          {submitLabel}
-        </button>
-      </div>
+  return (
+    <form onSubmit={submit} noValidate className="space-y-4">
+      {formError && <Alert onDismiss={() => setFormError(null)}>{formError}</Alert>}
+
+      {titleField}
+
+      {voice ? (
+        <>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className="btn-ghost text-sm"
+              aria-expanded={showDetails}
+              aria-controls={ids.details}
+              onClick={() => setShowDetails((s) => !s)}
+            >
+              {showDetails ? 'Hide details' : '+ Add details (due date, priority, category)'}
+            </button>
+          </div>
+          {showDetails && detailFields}
+        </>
+      ) : (
+        <>
+          {detailFields}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            {onCancel && (
+              <button type="button" className="btn-secondary" onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+            <button type="submit" className="btn-primary" disabled={saving}>
+              {saving && <Spinner label="Saving" className="h-4 w-4" />}
+              {submitLabel}
+            </button>
+          </div>
+        </>
+      )}
     </form>
   );
 }

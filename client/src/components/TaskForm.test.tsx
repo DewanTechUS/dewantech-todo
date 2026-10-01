@@ -51,8 +51,8 @@ describe('TaskForm', () => {
 
   it('falls back to typing when voice is unavailable', () => {
     render(<TaskForm voice speech={noSpeech} categories={[]} submitLabel="Add" onSubmit={vi.fn()} />);
-    expect(screen.getByText(/voice input isn't available/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/title/i)).toBeEnabled();
+    expect(screen.getByText(/voice isn't available/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Task' })).toBeEnabled();
   });
 
   it('validates lengths', () => {

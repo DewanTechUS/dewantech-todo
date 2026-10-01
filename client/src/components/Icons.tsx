@@ -26,6 +26,11 @@ export const StopIcon = (p: P) => (
     <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
   </svg>
 );
+export const ArrowUpIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </svg>
+);
 export const PlusIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M12 5v14M5 12h14" />

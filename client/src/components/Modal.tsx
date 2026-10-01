@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
+import { useDialog } from '../hooks/useDialog';
 import { CloseIcon } from './Icons';
 
 interface ModalProps {
@@ -11,43 +12,7 @@ interface ModalProps {
 export function Modal({ title, onClose, children }: ModalProps) {
   const titleId = useId();
   const panel = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const first = panel.current?.querySelector<HTMLElement>('input, textarea, select, button:not([data-close])');
-    (first ?? panel.current)?.focus();
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-      if (e.key === 'Tab' && panel.current) {
-        const focusables = [
-          ...panel.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'),
-        ];
-        if (!focusables.length) return;
-        const firstEl = focusables[0];
-        const lastEl = focusables[focusables.length - 1];
-        if (e.shiftKey && document.activeElement === firstEl) {
-          e.preventDefault();
-          lastEl.focus();
-        } else if (!e.shiftKey && document.activeElement === lastEl) {
-          e.preventDefault();
-          firstEl.focus();
-        }
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      previouslyFocused?.focus?.();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useDialog(panel, onClose, 'input, textarea, select, button:not([data-close])');
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
