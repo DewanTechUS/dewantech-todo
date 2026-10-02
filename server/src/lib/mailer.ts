@@ -24,7 +24,10 @@ export function createMailer(config: Config): Mailer {
     }
     return {
       async send(mail) {
-        if (config.NODE_ENV !== 'test') {
+        if (config.NODE_ENV === 'production') {
+          // Never write email bodies (e.g. reset links) to production logs.
+          console.error(`Email not sent (SMTP not configured): "${mail.subject}"`);
+        } else if (config.NODE_ENV !== 'test') {
           console.log(`\n[email → ${mail.to}] ${mail.subject}\n${mail.text}\n`);
         }
       },

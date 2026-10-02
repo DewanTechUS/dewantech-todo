@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { signup, useTestApp } from './helpers.js';
 import { Task } from '../src/models/Task.js';
@@ -78,6 +78,24 @@ describe('auth', () => {
     expect(await User.exists({ _id: user.id })).toBeNull();
     expect(await Task.countDocuments({ user: user.id })).toBe(0);
     expect((await request(app()).get('/api/auth/me').set(auth)).status).toBe(401);
+  });
+});
+
+describe('mailer', () => {
+  it('never logs reset links in production when SMTP is not configured', async () => {
+    const { createMailer } = await import('../src/lib/mailer.js');
+    const config = loadConfig({ NODE_ENV: 'production', MONGODB_URI: 'mongodb://x', JWT_SECRET: 'x'.repeat(40) });
+    const logs: string[] = [];
+    const spies = (['log', 'warn', 'error'] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation((...a: unknown[]) => void logs.push(a.join(' '))),
+    );
+    try {
+      await createMailer(config).send({ to: 'a@b.com', subject: 'Reset', text: 'https://x/reset-password?token=SECRET', html: '' });
+    } finally {
+      spies.forEach((s) => s.mockRestore());
+    }
+    expect(logs.join('\n')).not.toContain('SECRET');
+    expect(logs.join('\n')).toContain('not sent');
   });
 });
 
