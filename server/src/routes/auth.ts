@@ -16,6 +16,7 @@ import {
 } from '../lib/validation.js';
 import { requireAuth, signToken } from '../middleware/auth.js';
 import { parse } from '../middleware/validate.js';
+import { List } from '../models/List.js';
 import { Task, toTaskDTO, type TaskAttrs } from '../models/Task.js';
 import { User, toPublicUser } from '../models/User.js';
 
@@ -149,6 +150,18 @@ export function authRouter(config: Config, opts: { authRateLimit: number; mailer
     if (!(await bcrypt.compare(password, user.passwordHash))) {
       throw new HttpError(403, 'Incorrect password. Your account was not deleted.');
     }
+    const now = new Date();
+    // Lists this person owns are deleted for everyone, with their tasks.
+    const owned = (await List.find({ owner: user._id }).select('_id').lean()).map((l) => l._id);
+    await Task.deleteMany({ listId: { $in: owned } });
+    await List.deleteMany({ _id: { $in: owned } });
+    // In other people's lists, their tasks stay for the team (handed to the list owner) and assignments are cleared.
+    for (const l of await List.find({ 'members.user': user._id }).select('_id owner').lean()) {
+      await Task.updateMany({ listId: l._id, user: user._id }, { $set: { user: l.owner, updatedAt: now, serverUpdatedAt: now } });
+      await Task.updateMany({ listId: l._id, assignee: user._id }, { $set: { assignee: null, updatedAt: now, serverUpdatedAt: now } });
+    }
+    await List.updateMany({ 'members.user': user._id }, { $pull: { members: { user: user._id } } });
+    await List.updateMany({}, { $pull: { invites: { $or: [{ invitedBy: user._id }, { email: user.email }] } } });
     await Task.deleteMany({ user: user._id });
     await User.deleteOne({ _id: user._id });
     res.status(204).end();

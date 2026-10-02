@@ -9,13 +9,47 @@ export interface TaskFields {
   priority: Priority;
   category: string;
   completed: boolean;
+  /** Shared list the task belongs to; null = my private personal task. */
+  listId: string | null;
+  /** List member the task is assigned to (shared-list tasks only). */
+  assigneeId: string | null;
 }
 
 export interface Task extends TaskFields {
   id: string;
+  /** User who created the task. */
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+}
+
+export interface ListMember {
+  id: string;
+  name: string;
+  email: string;
+  role: 'owner' | 'member';
+}
+
+export interface SharedList {
+  id: string;
+  name: string;
+  ownerId: string;
+  /** My role in this list. */
+  role: 'owner' | 'member';
+  members: ListMember[];
+  /** Pending invitations (only visible to the owner). */
+  invites: { email: string; createdAt: string }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** An invitation waiting for me to accept or decline. */
+export interface ListInvite {
+  listId: string;
+  listName: string;
+  invitedBy: string;
+  createdAt: string;
 }
 
 export interface User {
@@ -46,4 +80,9 @@ export interface SyncResponse {
   tasks: Task[];
   results: Array<{ id: string | null; status: 'applied' | 'stale' | 'rejected'; reason?: string }>;
   cursor: string;
+  /** Shared lists I belong to (tasks of any other list are removed locally). */
+  lists?: SharedList[];
+  invites?: ListInvite[];
+  /** Tasks moved somewhere I can no longer see. */
+  removedTaskIds?: string[];
 }

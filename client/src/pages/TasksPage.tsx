@@ -1,20 +1,30 @@
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Alert } from '../components/Alert';
 import { FilterBar } from '../components/FilterBar';
-import { PlusIcon } from '../components/Icons';
+import { MailIcon, PlusIcon, UsersIcon } from '../components/Icons';
 import { Modal } from '../components/Modal';
 import { PageLoader } from '../components/Spinner';
-import { TaskForm } from '../components/TaskForm';
+import { TaskForm, emptyFields } from '../components/TaskForm';
 import { TaskItem } from '../components/TaskItem';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { categoriesOf, defaultFilters, filterTasks, type TaskFilters } from '../lib/filters';
-import type { Task } from '../lib/types';
+import type { SharedList, Task } from '../lib/types';
+
+/** Which tasks to show: my personal tasks, one shared list, or everything. */
+type Scope = 'personal' | 'all' | string;
+
+/** I can delete tasks I created, or any task in a list I own. Offline-created tasks have no creator id yet. */
+function canDelete(task: Task, meId: string, lists: Map<string, SharedList>) {
+  if (!task.createdBy || task.createdBy === meId) return true;
+  return Boolean(task.listId && lists.get(task.listId)?.role === 'owner');
+}
 
 export default function TasksPage() {
   const { user } = useAuth();
-  const { store, tasks, sync, loading, storageError } = useTasks();
+  const { store, tasks, lists, invites, sync, loading, storageError } = useTasks();
+  const [scope, setScope] = useState<Scope>('personal');
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
@@ -23,9 +33,17 @@ export default function TasksPage() {
   const location = useLocation();
   const [passwordReset, setPasswordReset] = useState(() => Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset));
 
-  const categories = useMemo(() => categoriesOf(tasks), [tasks]);
-  const visible = useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
-  const activeCount = tasks.filter((t) => !t.completed).length;
+  const listsById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
+  // If the selected list disappears (left/removed/deleted), fall back to personal tasks.
+  const activeScope: Scope = scope === 'personal' || scope === 'all' || listsById.has(scope) ? scope : 'personal';
+  const inScope = useMemo(
+    () => tasks.filter((t) => (activeScope === 'all' ? true : activeScope === 'personal' ? !t.listId : t.listId === activeScope)),
+    [tasks, activeScope],
+  );
+  const categories = useMemo(() => categoriesOf(inScope), [inScope]);
+  const visible = useMemo(() => filterTasks(inScope, filters), [inScope, filters]);
+  const activeCount = inScope.filter((t) => !t.completed).length;
+  const currentList = listsById.get(activeScope);
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -37,19 +55,26 @@ export default function TasksPage() {
   };
 
   if (storageError) return <Alert>{storageError}</Alert>;
-  if (loading || !store) return <PageLoader label="Loading your tasks…" />;
+  if (loading || !store || !user) return <PageLoader label="Loading your tasks…" />;
+
+  const person = (list: SharedList | undefined, id: string | null) => {
+    const m = id ? list?.members.find((x) => x.id === id) : undefined;
+    return m ? { id: m.id, name: m.name } : undefined;
+  };
+
+  const tabs: { value: Scope; label: string }[] = [
+    { value: 'personal', label: 'Personal' },
+    ...lists.map((l) => ({ value: l.id, label: l.name })),
+    ...(lists.length ? [{ value: 'all' as Scope, label: 'All' }] : []),
+  ];
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {user ? `Hi, ${user.name.split(' ')[0]}` : 'My tasks'}
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{`Hi, ${user.name.split(' ')[0]}`}</h1>
           <p className="text-slate-600 dark:text-slate-400" aria-live="polite">
-            {tasks.length === 0
-              ? 'No tasks yet.'
-              : `${activeCount} active · ${tasks.length - activeCount} done`}
+            {inScope.length === 0 ? 'No tasks here yet.' : `${activeCount} active · ${inScope.length - activeCount} done`}
           </p>
         </div>
         <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setCreating(true)}>
@@ -57,6 +82,19 @@ export default function TasksPage() {
         </button>
       </div>
 
+      {invites.length > 0 && (
+        <Alert kind="info">
+          <span className="inline-flex items-center gap-1.5">
+            <MailIcon width={16} height={16} />
+            {invites.length === 1
+              ? `${invites[0].invitedBy} invited you to “${invites[0].listName}”.`
+              : `You have ${invites.length} invitations to shared lists.`}
+          </span>{' '}
+          <Link to="/lists" className="font-semibold underline">
+            View invitations
+          </Link>
+        </Alert>
+      )}
       {sync.error && (
         <Alert kind="warning">
           {sync.error}{' '}
@@ -72,13 +110,44 @@ export default function TasksPage() {
       )}
       {actionError && <Alert onDismiss={() => setActionError(null)}>{actionError}</Alert>}
 
-      {tasks.length > 0 && <FilterBar filters={filters} categories={categories} onChange={setFilters} />}
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Which list to show" className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+          {tabs.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              aria-pressed={activeScope === t.value}
+              onClick={() => setScope(t.value)}
+              className={`min-h-[40px] shrink-0 whitespace-nowrap rounded-lg px-4 text-sm font-medium ${
+                activeScope === t.value
+                  ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-600 dark:text-white'
+                  : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <Link to="/lists" className="btn-ghost text-sm">
+          <UsersIcon width={18} height={18} /> {lists.length ? 'Manage lists' : 'Share with others'}
+        </Link>
+      </div>
 
-      {tasks.length === 0 ? (
+      {currentList && (
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Shared with {currentList.members.map((m) => (m.id === user.id ? 'you' : m.name)).join(', ')}.
+        </p>
+      )}
+
+      {inScope.length > 0 && <FilterBar filters={filters} categories={categories} onChange={setFilters} />}
+
+      {inScope.length === 0 ? (
         <div className="card flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <p className="text-lg font-semibold">Your list is empty</p>
+          <p className="text-lg font-semibold">{currentList ? `“${currentList.name}” is empty` : 'Your list is empty'}</p>
           <p className="max-w-sm text-slate-600 dark:text-slate-400">
-            Add your first task by typing or with the microphone. Tasks are saved on this device and synced to your account.
+            {currentList
+              ? 'Tasks you add here are visible to everyone in this list.'
+              : 'Add your first task by typing or with the microphone. Personal tasks are only visible to you.'}
           </p>
           <button type="button" className="btn-primary mt-2" onClick={() => setCreating(true)}>
             <PlusIcon /> Add a task
@@ -93,15 +162,22 @@ export default function TasksPage() {
         </div>
       ) : (
         <ul className="space-y-3" aria-label="Tasks">
-          {visible.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onToggle={() => void run(() => store.toggle(task.id))}
-              onEdit={() => setEditing(task)}
-              onDelete={() => setDeleting(task)}
-            />
-          ))}
+          {visible.map((task) => {
+            const list = task.listId ? listsById.get(task.listId) : undefined;
+            return (
+              <TaskItem
+                key={task.id}
+                task={task}
+                meId={user.id}
+                listName={activeScope === 'all' ? list?.name : undefined}
+                addedBy={task.createdBy && task.createdBy !== user.id ? person(list, task.createdBy) : undefined}
+                assignee={person(list, task.assigneeId)}
+                onToggle={() => void run(() => store.toggle(task.id))}
+                onEdit={() => setEditing(task)}
+                onDelete={canDelete(task, user.id, listsById) ? () => setDeleting(task) : undefined}
+              />
+            );
+          })}
         </ul>
       )}
 
@@ -109,7 +185,10 @@ export default function TasksPage() {
         <Modal title="New task" onClose={() => setCreating(false)}>
           <TaskForm
             voice
+            initial={{ ...emptyFields, listId: currentList?.id ?? null }}
             categories={categories}
+            lists={lists}
+            meId={user.id}
             submitLabel="Add task"
             onCancel={() => setCreating(false)}
             onSubmit={async (fields) => {
@@ -125,6 +204,8 @@ export default function TasksPage() {
           <TaskForm
             initial={editing}
             categories={categories}
+            lists={lists}
+            meId={user.id}
             submitLabel="Save changes"
             onCancel={() => setEditing(null)}
             onSubmit={async (fields) => {
@@ -138,7 +219,8 @@ export default function TasksPage() {
       {deleting && (
         <Modal title="Delete task?" onClose={() => setDeleting(null)}>
           <p className="mb-5 text-slate-700 dark:text-slate-300">
-            “{deleting.title}” will be deleted from all your devices. This can't be undone.
+            “{deleting.title}” will be deleted{deleting.listId ? ' for everyone in the list' : ' from all your devices'}. This can't be
+            undone.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" className="btn-secondary" onClick={() => setDeleting(null)}>

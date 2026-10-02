@@ -51,6 +51,11 @@ export function PrivacyPage() {
           <strong>Your tasks:</strong> titles, descriptions, due dates, priorities, categories and completion status that you enter.
         </li>
         <li>
+          <strong>Shared lists:</strong> if you create or join a shared list, everyone in that list can see your name and email address,
+          the list’s tasks, and who added or is assigned to each task. When you invite someone, we store their email address and send
+          them an invitation email on your behalf. Your personal tasks are never shared.
+        </li>
+        <li>
           <strong>Technical data:</strong> our servers and hosting provider may log IP addresses, request times and error
           information for security and reliability. Logs are kept for <V k="logRetention" label="LOG RETENTION PERIOD, e.g. 30 days" />.
         </li>

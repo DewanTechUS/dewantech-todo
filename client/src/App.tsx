@@ -12,6 +12,7 @@ import { NotFoundPage, PrivacyPage, TermsPage } from './pages/LegalPages';
 
 const TasksPage = lazy(() => import('./pages/TasksPage'));
 const AccountPage = lazy(() => import('./pages/AccountPage'));
+const ListsPage = lazy(() => import('./pages/ListsPage'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const SupportPage = lazy(() => import('./pages/SupportPage'));
 
@@ -34,6 +35,14 @@ export default function App() {
                 <Routes>
                   <Route element={<Layout />}>
                     <Route index element={<Home />} />
+                    <Route
+                      path="lists"
+                      element={
+                        <RequireAuth>
+                          <ListsPage />
+                        </RequireAuth>
+                      }
+                    />
                     <Route
                       path="account"
                       element={

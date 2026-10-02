@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
-import { PRIORITIES, type Priority, type TaskFields } from '../lib/types';
+import { PRIORITIES, type Priority, type SharedList, type TaskFields } from '../lib/types';
 import { Alert } from './Alert';
 import { Spinner } from './Spinner';
 import { VoiceInput } from './VoiceInput';
@@ -12,6 +12,8 @@ export const emptyFields: TaskFields = {
   priority: 'medium',
   category: '',
   completed: false,
+  listId: null,
+  assigneeId: null,
 };
 
 export function validateTask(f: TaskFields): Partial<Record<keyof TaskFields, string>> {
@@ -27,6 +29,10 @@ export function validateTask(f: TaskFields): Partial<Record<keyof TaskFields, st
 interface TaskFormProps {
   initial?: TaskFields;
   categories: string[];
+  /** Shared lists I belong to (enables the List and Assign to fields). */
+  lists?: SharedList[];
+  /** My user id (to label "me" among list members). */
+  meId?: string;
   submitLabel: string;
   onSubmit: (fields: TaskFields) => Promise<void>;
   onCancel?: () => void;
@@ -38,7 +44,17 @@ interface TaskFormProps {
   speech?: SpeechService;
 }
 
-export function TaskForm({ initial = emptyFields, categories, submitLabel, onSubmit, onCancel, voice, speech }: TaskFormProps) {
+export function TaskForm({
+  initial = emptyFields,
+  categories,
+  lists = [],
+  meId,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  voice,
+  speech,
+}: TaskFormProps) {
   const [fields, setFields] = useState<TaskFields>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof TaskFields, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,6 +70,8 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
     category: `${id}-category`,
     categories: `${id}-categories`,
     details: `${id}-details`,
+    list: `${id}-list`,
+    assignee: `${id}-assignee`,
   };
 
   const set = <K extends keyof TaskFields>(key: K, value: TaskFields[K]) => {
@@ -123,6 +141,60 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
       )}
     </div>
   );
+
+  const selectedList = lists.find((l) => l.id === fields.listId);
+  const listFields =
+    lists.length > 0 ? (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor={ids.list} className="label">
+            List
+          </label>
+          <select
+            id={ids.list}
+            className="input"
+            value={fields.listId ?? ''}
+            onChange={(e) => {
+              const listId = e.target.value || null;
+              const next = lists.find((l) => l.id === listId);
+              setFields((f) => ({
+                ...f,
+                listId,
+                // Keep the assignee only if they're in the newly chosen list.
+                assigneeId: next && f.assigneeId && next.members.some((m) => m.id === f.assigneeId) ? f.assigneeId : null,
+              }));
+            }}
+          >
+            <option value="">Personal (only me)</option>
+            {lists.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name} (shared)
+              </option>
+            ))}
+          </select>
+        </div>
+        {selectedList && (
+          <div>
+            <label htmlFor={ids.assignee} className="label">
+              Assign to
+            </label>
+            <select
+              id={ids.assignee}
+              className="input"
+              value={fields.assigneeId ?? ''}
+              onChange={(e) => set('assigneeId', e.target.value || null)}
+            >
+              <option value="">Nobody</option>
+              {selectedList.members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.id === meId ? `${m.name} (me)` : m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    ) : null;
 
   const detailFields = (
     <div id={ids.details} className="space-y-4">
@@ -216,6 +288,8 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
       {formError && <Alert onDismiss={() => setFormError(null)}>{formError}</Alert>}
 
       {titleField}
+
+      {listFields}
 
       {voice ? (
         <>

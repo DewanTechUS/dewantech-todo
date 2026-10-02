@@ -12,6 +12,8 @@ const fields = (title: string, extra: Partial<TaskFields> = {}): TaskFields => (
   priority: 'medium',
   category: '',
   completed: false,
+  listId: null,
+  assigneeId: null,
   ...extra,
 });
 
@@ -28,7 +30,7 @@ class FakeServer {
       if (c.op === 'delete') {
         if (existing) this.tasks.set(c.id, { ...existing, deletedAt: c.updatedAt, updatedAt: c.updatedAt });
       } else if (!existing || existing.updatedAt < c.updatedAt) {
-        this.tasks.set(c.id, { id: c.id, ...c.data, createdAt: c.createdAt, updatedAt: c.updatedAt, deletedAt: null });
+        this.tasks.set(c.id, { id: c.id, ...c.data, createdBy: "u1", createdAt: c.createdAt, updatedAt: c.updatedAt, deletedAt: null });
       }
       results.push({ id: c.id, status: 'applied' });
     }
@@ -121,6 +123,7 @@ describe('TaskStore (offline-first)', () => {
     const remote: Task = {
       id: uuid(),
       ...fields('From my phone'),
+      createdBy: 'u1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       deletedAt: null,
@@ -155,6 +158,38 @@ describe('TaskStore (offline-first)', () => {
     expect(onUnauthorized).toHaveBeenCalledOnce();
     expect(ts.state.status).toBe('error');
     expect(ts.state.pending).toBe(1);
+  });
+
+  it('keeps shared lists offline and removes tasks of lists I left or that moved away', async () => {
+    const list = { id: 'L1', name: 'Family', ownerId: 'u1', role: 'member' as const, members: [], invites: [], createdAt: '', updatedAt: '' };
+    let lists = [list];
+    let removed: string[] = [];
+    const server = new FakeServer();
+    const { ts, store } = await setup({
+      sync: async (req) => ({ ...(await server.handle(req)), lists, invites: [], removedTaskIds: removed }),
+    });
+    const shared = await ts.create(fields('Shared', { listId: 'L1' }));
+    const moved = await ts.create(fields('Will move'));
+    await ts.syncNow();
+    expect(ts.lists.map((l) => l.name)).toEqual(['Family']);
+    expect(JSON.parse((await store.getMeta('lists')) ?? '[]')).toHaveLength(1); // kept for offline use
+
+    // The server says a task moved somewhere I can't see, and I'm no longer in the list.
+    server.tasks.delete(moved.id);
+    removed = [moved.id];
+    lists = [];
+    server.tasks.delete(shared.id);
+    await ts.syncNow();
+    expect(ts.tasks.map((t) => t.title)).toEqual([]);
+    expect(ts.lists).toEqual([]);
+  });
+
+  it('only allows assigning shared-list tasks', async () => {
+    const { ts } = await setup({ online: () => false });
+    const personal = await ts.create(fields('Mine', { assigneeId: 'someone' }));
+    expect(personal.assigneeId).toBeNull();
+    const shared = await ts.create(fields('Ours', { listId: 'L1', assigneeId: 'someone' }));
+    expect(shared).toMatchObject({ listId: 'L1', assigneeId: 'someone' });
   });
 
   it('treats network failures as offline and retries later', async () => {

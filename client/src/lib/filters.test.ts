@@ -16,6 +16,9 @@ const task = (overrides: Partial<Task>): Task => {
     createdAt: new Date(2026, 0, n).toISOString(),
     updatedAt: new Date(2026, 0, n).toISOString(),
     deletedAt: null,
+    listId: null,
+    assigneeId: null,
+    createdBy: "me",
     ...overrides,
   };
 };

@@ -42,6 +42,7 @@ export const deleteAccountSchema = z.object({
 });
 
 const uuid = z.string().uuid('Task id must be a UUID');
+const objectId = z.string().regex(/^[a-f0-9]{24}$/, 'Invalid person');
 const isoDateTime = z.string().datetime({ offset: true });
 const calendarDate = z
   .string()
@@ -59,6 +60,8 @@ export const taskFieldsSchema = z
     priority: z.enum(PRIORITIES).default('medium'),
     category: z.string().trim().max(50, 'Category must be at most 50 characters').default(''),
     completed: z.boolean().default(false),
+    listId: z.string().uuid('Invalid list').nullable().default(null),
+    assigneeId: objectId.nullable().default(null),
   })
   .strict();
 
@@ -86,6 +89,17 @@ export const syncChangeSchema = z.discriminatedUnion('op', [
   }),
   z.object({ op: z.literal('delete'), id: uuid, updatedAt: isoDateTime }),
 ]);
+
+export const createListSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    name: z.string().trim().min(1, 'Give the list a name').max(60, 'List name must be at most 60 characters'),
+  })
+  .strict();
+
+export const renameListSchema = z.object({ name: createListSchema.shape.name }).strict();
+
+export const inviteSchema = z.object({ email: emailSchema }).strict();
 
 export const syncRequestSchema = z.object({
   since: isoDateTime.nullable().default(null),

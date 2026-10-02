@@ -1,4 +1,4 @@
-import type { Session, SyncRequest, SyncResponse, User } from './types';
+import type { ListInvite, Session, SharedList, SyncRequest, SyncResponse, User } from './types';
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
@@ -73,4 +73,20 @@ export const api = {
     apiFetch<Session>('/api/auth/change-password', { method: 'POST', token, body: { currentPassword, newPassword } }),
   exportData: (token: string) => apiFetch<unknown>('/api/auth/export', { token }),
   sync: (token: string, body: SyncRequest) => apiFetch<SyncResponse>('/api/tasks/sync', { method: 'POST', token, body }),
+  lists: {
+    all: (token: string) => apiFetch<{ lists: SharedList[]; invites: ListInvite[] }>('/api/lists', { token }),
+    create: (token: string, name: string) => apiFetch<{ list: SharedList }>('/api/lists', { method: 'POST', token, body: { name } }),
+    rename: (token: string, id: string, name: string) =>
+      apiFetch<{ list: SharedList }>(`/api/lists/${id}`, { method: 'PATCH', token, body: { name } }),
+    remove: (token: string, id: string) => apiFetch<void>(`/api/lists/${id}`, { method: 'DELETE', token }),
+    invite: (token: string, id: string, email: string) =>
+      apiFetch<{ list: SharedList }>(`/api/lists/${id}/invites`, { method: 'POST', token, body: { email } }),
+    cancelInvite: (token: string, id: string, email: string) =>
+      apiFetch<{ list: SharedList }>(`/api/lists/${id}/invites/${encodeURIComponent(email)}`, { method: 'DELETE', token }),
+    accept: (token: string, id: string) => apiFetch<{ list: SharedList }>(`/api/lists/${id}/accept`, { method: 'POST', token }),
+    decline: (token: string, id: string) => apiFetch<void>(`/api/lists/${id}/decline`, { method: 'POST', token }),
+    removeMember: (token: string, id: string, userId: string) =>
+      apiFetch<{ list: SharedList }>(`/api/lists/${id}/members/${userId}`, { method: 'DELETE', token }),
+    leave: (token: string, id: string) => apiFetch<void>(`/api/lists/${id}/leave`, { method: 'POST', token }),
+  },
 };

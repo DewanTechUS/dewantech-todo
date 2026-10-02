@@ -50,6 +50,26 @@ export function createMailer(config: Config): Mailer {
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
+export function listInviteEmail(inviterName: string, listName: string, appUrl: string): Omit<Mail, 'to'> {
+  const subject = `${inviterName} invited you to “${listName}” on DoNext`;
+  const text = [
+    `${inviterName} invited you to the shared list “${listName}” on DoNext.`,
+    '',
+    `Log in (or sign up with this email address) to accept: ${appUrl}/lists`,
+    '',
+    '— DoNext by DewanTech™',
+  ].join('\n');
+  const html = `<!doctype html><html><body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f8fafc;padding:24px;color:#0f172a">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:28px;border:1px solid #e2e8f0">
+    <h1 style="margin:0 0 12px;font-size:20px;color:#012360">You're invited to a shared list</h1>
+    <p><strong>${escapeHtml(inviterName)}</strong> invited you to <strong>“${escapeHtml(listName)}”</strong> on DoNext.</p>
+    <p style="margin:24px 0"><a href="${escapeHtml(appUrl)}/lists" style="background:#006fef;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600;display:inline-block">Open DoNext</a></p>
+    <p style="font-size:14px;color:#475569">Log in — or sign up with this email address — and accept the invitation on the Shared lists page.</p>
+    <p style="font-size:12px;color:#94a3b8;margin-top:24px">DoNext by DewanTech™ · Technology Built with Purpose.</p>
+  </div></body></html>`;
+  return { subject, text, html };
+}
+
 export function passwordResetEmail(name: string, link: string, minutes: number): Omit<Mail, 'to'> {
   const subject = 'Reset your DoNext password';
   const text = [

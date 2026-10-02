@@ -1,6 +1,12 @@
 import { formatDueDate, isOverdue } from '../lib/filters';
 import type { Task } from '../lib/types';
-import { CheckIcon, EditIcon, TrashIcon } from './Icons';
+import { Avatar } from './Avatar';
+import { CheckIcon, EditIcon, TrashIcon, UsersIcon } from './Icons';
+
+interface Person {
+  id: string;
+  name: string;
+}
 
 const priorityStyle = {
   high: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200',
@@ -10,12 +16,23 @@ const priorityStyle = {
 
 interface TaskItemProps {
   task: Task;
+  /** Name of the shared list, shown when tasks from several lists are mixed. */
+  listName?: string;
+  /** Who added the task, when it wasn't me. */
+  addedBy?: Person;
+  /** Who it's assigned to. */
+  assignee?: Person;
+  meId?: string;
   onToggle: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  /** Omit when I'm not allowed to delete this task. */
+  onDelete?: () => void;
 }
 
-export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
+const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-1';
+const personChip = 'inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-0.5 pr-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+
+export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, onEdit, onDelete }: TaskItemProps) {
   const overdue = isOverdue(task);
   return (
     <li className="card flex items-start gap-3 p-3 sm:p-4">
@@ -70,6 +87,24 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
               <time dateTime={task.dueDate}>{formatDueDate(task.dueDate)}</time>
             </span>
           )}
+          {listName && (
+            <span className={`${chip} bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-300`}>
+              <UsersIcon width={12} height={12} />
+              <span className="sr-only">List: </span>
+              {listName}
+            </span>
+          )}
+          {addedBy && (
+            <span className={personChip}>
+              <Avatar name={addedBy.name} seed={addedBy.id} size={20} /> From {addedBy.name}
+            </span>
+          )}
+          {assignee && (
+            <span className={personChip}>
+              <Avatar name={assignee.name} seed={assignee.id} size={20} />
+              {assignee.id === meId ? 'Assigned to you' : `For ${assignee.name}`}
+            </span>
+          )}
         </div>
       </div>
 
@@ -77,14 +112,16 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
         <button type="button" onClick={onEdit} className="btn-ghost" aria-label={`Edit “${task.title}”`}>
           <EditIcon />
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="btn-ghost hover:text-red-600 dark:hover:text-red-400"
-          aria-label={`Delete “${task.title}”`}
-        >
-          <TrashIcon />
-        </button>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="btn-ghost hover:text-red-600 dark:hover:text-red-400"
+            aria-label={`Delete “${task.title}”`}
+          >
+            <TrashIcon />
+          </button>
+        )}
       </div>
     </li>
   );

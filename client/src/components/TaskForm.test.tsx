@@ -36,7 +36,38 @@ describe('TaskForm', () => {
       priority: 'high',
       category: 'Work',
       completed: false,
+      listId: null,
+      assigneeId: null,
     });
+  });
+
+  it('puts a task in a shared list and assigns it to a member of that list', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const lists = [
+      {
+        id: 'L1',
+        name: 'Family',
+        ownerId: 'me',
+        role: 'owner' as const,
+        members: [
+          { id: 'me', name: 'Rocky', email: 'r@x.com', role: 'owner' as const },
+          { id: 'u2', name: 'Sara', email: 's@x.com', role: 'member' as const },
+        ],
+        invites: [],
+        createdAt: '',
+        updatedAt: '',
+      },
+    ];
+    render(<TaskForm categories={[]} lists={lists} meId="me" submitLabel="Add task" onSubmit={onSubmit} />);
+    expect(screen.queryByLabelText('Assign to')).not.toBeInTheDocument(); // personal tasks can't be assigned
+
+    await user.type(screen.getByLabelText(/title/i), 'Buy milk');
+    await user.selectOptions(screen.getByLabelText('List'), 'L1');
+    expect(screen.getByRole('option', { name: 'Rocky (me)' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Assign to'), 'u2');
+    await user.click(screen.getByRole('button', { name: 'Add task' }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Buy milk', listId: 'L1', assigneeId: 'u2' }));
   });
 
   it('shows a helpful message when saving fails', async () => {

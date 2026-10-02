@@ -21,6 +21,7 @@ import {
   RefreshIcon,
   ShieldIcon,
   UserIcon,
+  UsersIcon,
 } from './Icons';
 import { Spinner } from './Spinner';
 import { SyncIndicator } from './SyncIndicator';
@@ -33,6 +34,7 @@ interface NavItem {
   label: string;
   end: boolean;
   Icon: IconType;
+  badge?: number;
 }
 
 const desktopNavClass = ({ isActive }: { isActive: boolean }) =>
@@ -44,6 +46,7 @@ const desktopNavClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Header() {
   const { status } = useAuth();
+  const { invites } = useTasks();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
@@ -61,6 +64,7 @@ export function Header() {
     status === 'authenticated'
       ? [
           { to: '/', label: 'My tasks', end: true, Icon: ListIcon },
+          { to: '/lists', label: 'Shared lists', end: false, Icon: UsersIcon, badge: invites.length },
           { to: '/account', label: 'Account', end: false, Icon: UserIcon },
         ]
       : [];
@@ -83,6 +87,7 @@ export function Header() {
             links.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end} className={desktopNavClass}>
                 {l.label}
+                {l.badge ? <Badge count={l.badge} /> : null}
               </NavLink>
             ))
           ) : (
@@ -131,15 +136,26 @@ function MenuGroup({ label, children }: { label: string; children: ReactNode }) 
   );
 }
 
-function MenuLink({ to, end, label, Icon }: { to: string; end?: boolean; label: string; Icon: IconType }) {
+function MenuLink({ to, end, label, Icon, badge }: { to: string; end?: boolean; label: string; Icon: IconType; badge?: number }) {
   return (
     <li>
       <NavLink to={to} end={end} className={({ isActive }) => (isActive ? activeRowClass : rowClass)}>
         <Icon className="shrink-0 text-slate-400" width={18} height={18} />
         <span className="flex-1">{label}</span>
+        {badge ? <Badge count={badge} /> : null}
         <ChevronRightIcon className="text-slate-300 dark:text-slate-600" width={16} height={16} />
       </NavLink>
     </li>
+  );
+}
+
+/** Small red counter (e.g. pending invitations). */
+function Badge({ count }: { count: number }) {
+  return (
+    <span className="ml-1 inline-flex min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold leading-5 text-white">
+      {count}
+      <span className="sr-only"> new</span>
+    </span>
   );
 }
 

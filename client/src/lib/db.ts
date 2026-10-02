@@ -73,7 +73,13 @@ export class LocalStore {
    *  1. drops outbox entries that were sent (only if not edited again since — matched by rev),
    *  2. applies server tasks, except those that still have a newer pending local edit.
    */
-  async applySync(sent: OutboxEntry[], serverTasks: Task[], cursor: string) {
+  async applySync(
+    sent: OutboxEntry[],
+    serverTasks: Task[],
+    cursor: string,
+    /** Lists I currently belong to; tasks of any other list are removed from this device. */
+    extras: { listIds?: string[]; removedTaskIds?: string[] } = {},
+  ) {
     const tx = this.db.transaction(['tasks', 'outbox', 'meta'], 'readwrite');
     const outbox = tx.objectStore('outbox');
     const tasks = tx.objectStore('tasks');
@@ -86,6 +92,19 @@ export class LocalStore {
       if (await outbox.get(t.id)) continue;
       if (t.deletedAt) await tasks.delete(t.id);
       else await tasks.put(t);
+    }
+    for (const id of extras.removedTaskIds ?? []) {
+      await tasks.delete(id);
+      await outbox.delete(id);
+    }
+    if (extras.listIds) {
+      const mine = new Set(extras.listIds);
+      for (const t of await tasks.getAll()) {
+        if (t.listId && !mine.has(t.listId)) {
+          await tasks.delete(t.id);
+          await outbox.delete(t.id);
+        }
+      }
     }
     await tx.objectStore('meta').put(cursor, 'cursor');
     await tx.done;

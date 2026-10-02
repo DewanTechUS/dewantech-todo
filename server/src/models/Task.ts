@@ -21,6 +21,12 @@ const taskSchema = new Schema(
     priority: { type: String, enum: PRIORITIES, default: 'medium' },
     category: { type: String, default: '', trim: true, maxlength: 50 },
     completed: { type: Boolean, default: false },
+    /** Shared list this task belongs to; null = the creator's private personal task. */
+    listId: { type: String, default: null },
+    /** List member the task is assigned to (shared-list tasks only). */
+    assignee: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    /** Lists this task was moved out of, so those members' devices can remove their copy. */
+    movedFrom: { type: [String], default: [] },
     createdAt: { type: Date, required: true },
     updatedAt: { type: Date, required: true },
     deletedAt: { type: Date, default: null },
@@ -30,6 +36,7 @@ const taskSchema = new Schema(
 );
 
 taskSchema.index({ user: 1, serverUpdatedAt: 1 });
+taskSchema.index({ listId: 1, serverUpdatedAt: 1 });
 
 export type TaskAttrs = InferSchemaType<typeof taskSchema>;
 
@@ -41,6 +48,10 @@ export interface TaskDTO {
   priority: Priority;
   category: string;
   completed: boolean;
+  listId: string | null;
+  assigneeId: string | null;
+  /** Who created the task. */
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -55,6 +66,9 @@ export function toTaskDTO(t: TaskAttrs): TaskDTO {
     priority: t.priority as Priority,
     category: t.category ?? '',
     completed: Boolean(t.completed),
+    listId: t.listId ?? null,
+    assigneeId: t.assignee ? String(t.assignee) : null,
+    createdBy: String(t.user),
     createdAt: new Date(t.createdAt).toISOString(),
     updatedAt: new Date(t.updatedAt).toISOString(),
     deletedAt: t.deletedAt ? new Date(t.deletedAt).toISOString() : null,

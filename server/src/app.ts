@@ -9,6 +9,7 @@ import type { Config } from './config.js';
 import { createMailer, type Mailer } from './lib/mailer.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { authRouter } from './routes/auth.js';
+import { listsRouter } from './routes/lists.js';
 import { tasksRouter } from './routes/tasks.js';
 
 export interface AppOptions {
@@ -58,8 +59,10 @@ export function createApp(config: Config, opts: AppOptions = {}): Express {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
   });
-  app.use('/api/auth', authRouter(config, { authRateLimit: opts.authRateLimit ?? 20, mailer: opts.mailer ?? createMailer(config) }));
+  const mailer = opts.mailer ?? createMailer(config);
+  app.use('/api/auth', authRouter(config, { authRateLimit: opts.authRateLimit ?? 20, mailer }));
   app.use('/api/tasks', tasksRouter(config));
+  app.use('/api/lists', listsRouter(config, { mailer }));
   app.use('/api', notFound);
 
   if (config.SERVE_CLIENT) {

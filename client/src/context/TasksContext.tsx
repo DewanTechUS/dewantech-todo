@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useSyncExternal
 import { api } from '../lib/api';
 import { LocalStore } from '../lib/db';
 import { TaskStore, type SyncState } from '../lib/taskStore';
-import type { Task } from '../lib/types';
+import type { ListInvite, SharedList, Task } from '../lib/types';
 import { useAuth } from './AuthContext';
 
 const TasksContext = createContext<{ store: TaskStore | null; error: string | null }>({ store: null, error: null });
@@ -26,6 +26,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         local = opened;
         const ts = new TaskStore({
           store: opened,
+          userId: user.id,
           sync: (req) => api.sync(tokenRef.current ?? '', req),
           onUnauthorized: markExpired,
         });
@@ -51,6 +52,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 }
 
 const EMPTY: Task[] = [];
+const NO_LISTS: SharedList[] = [];
+const NO_INVITES: ListInvite[] = [];
 const IDLE: SyncState = { status: 'idle', pending: 0, lastSyncedAt: null, error: null };
 const noop = () => () => undefined;
 
@@ -58,6 +61,8 @@ export function useTasks() {
   const { store, error } = useContext(TasksContext);
   const subscribe = store?.subscribe ?? noop;
   const tasks = useSyncExternalStore(subscribe, () => store?.tasks ?? EMPTY);
+  const lists = useSyncExternalStore(subscribe, () => store?.lists ?? NO_LISTS);
+  const invites = useSyncExternalStore(subscribe, () => store?.invites ?? NO_INVITES);
   const sync = useSyncExternalStore(subscribe, () => store?.state ?? IDLE);
-  return { store, tasks, sync, loading: !store && !error, storageError: error };
+  return { store, tasks, lists, invites, sync, loading: !store && !error, storageError: error };
 }

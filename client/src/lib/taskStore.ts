@@ -1,7 +1,7 @@
 import { ApiError } from './api';
 import { uuid } from './id';
 import type { LocalStore } from './db';
-import type { OutboxEntry, SyncRequest, SyncResponse, Task, TaskFields } from './types';
+import type { ListInvite, OutboxEntry, SharedList, SyncRequest, SyncResponse, Task, TaskFields } from './types';
 
 export type SyncStatus = 'idle' | 'syncing' | 'offline' | 'error';
 
@@ -14,6 +14,8 @@ export interface SyncState {
 
 export interface TaskStoreDeps {
   store: LocalStore;
+  /** The signed-in user (recorded as the creator of new tasks). */
+  userId?: string;
   sync: (req: SyncRequest) => Promise<SyncResponse>;
   isOnline?: () => boolean;
   onUnauthorized?: () => void;
@@ -33,7 +35,18 @@ const pickFields = (t: TaskFields): TaskFields => ({
   priority: t.priority,
   category: t.category.trim(),
   completed: t.completed,
+  listId: t.listId ?? null,
+  // Only shared-list tasks can be assigned.
+  assigneeId: t.listId ? (t.assigneeId ?? null) : null,
 });
+
+const parseJSON = <T,>(raw: string | null, fallback: T): T => {
+  try {
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 /**
  * Offline-first task repository. Every edit is written to IndexedDB first and
@@ -42,6 +55,10 @@ const pickFields = (t: TaskFields): TaskFields => ({
  */
 export class TaskStore {
   tasks: Task[] = [];
+  /** Shared lists I belong to (as of the last sync; kept offline). */
+  lists: SharedList[] = [];
+  /** Invitations waiting for me. */
+  invites: ListInvite[] = [];
   state: SyncState = { status: 'idle', pending: 0, lastSyncedAt: null, error: null };
 
   private listeners = new Set<() => void>();
@@ -68,6 +85,8 @@ export class TaskStore {
   private emit() {
     // New references so React notices the change.
     this.tasks = [...this.tasks];
+    this.lists = [...this.lists];
+    this.invites = [...this.invites];
     this.state = { ...this.state };
     this.listeners.forEach((fn) => fn());
   }
@@ -78,12 +97,16 @@ export class TaskStore {
   }
 
   async init() {
-    const [tasks, pending, lastSyncedAt] = await Promise.all([
+    const [tasks, pending, lastSyncedAt, lists, invites] = await Promise.all([
       this.deps.store.getTasks(),
       this.deps.store.countOutbox(),
       this.deps.store.getMeta('lastSyncedAt'),
+      this.deps.store.getMeta('lists'),
+      this.deps.store.getMeta('invites'),
     ]);
     this.tasks = tasks;
+    this.lists = parseJSON<SharedList[]>(lists, []);
+    this.invites = parseJSON<ListInvite[]>(invites, []);
     this.state = { ...this.state, pending, lastSyncedAt, status: this.isOnline() ? 'idle' : 'offline' };
     this.emit();
   }
@@ -91,7 +114,7 @@ export class TaskStore {
   async create(fields: TaskFields): Promise<Task> {
     const ts = this.now.toISOString();
     const data = pickFields(fields);
-    const task: Task = { id: uuid(), ...data, createdAt: ts, updatedAt: ts, deletedAt: null };
+    const task: Task = { id: uuid(), ...data, createdBy: this.deps.userId ?? '', createdAt: ts, updatedAt: ts, deletedAt: null };
     await this.deps.store.putTaskAndQueue(task, { op: 'upsert', id: task.id, updatedAt: ts, createdAt: ts, data, rev: nextRev() });
     this.tasks.push(task);
     await this.afterLocalChange();
@@ -174,9 +197,20 @@ export class TaskStore {
     try {
       const res = await this.deps.sync({ since, changes: sent.map(({ rev: _rev, ...change }) => change) });
       if (this.stopped) return;
-      await store.applySync(sent, res.tasks, res.cursor);
+      await store.applySync(sent, res.tasks, res.cursor, {
+        listIds: res.lists?.map((l) => l.id),
+        removedTaskIds: res.removedTaskIds,
+      });
       const syncedAt = this.now.toISOString();
       await store.setMeta('lastSyncedAt', syncedAt);
+      if (res.lists) {
+        this.lists = res.lists;
+        await store.setMeta('lists', JSON.stringify(res.lists));
+      }
+      if (res.invites) {
+        this.invites = res.invites;
+        await store.setMeta('invites', JSON.stringify(res.invites));
+      }
 
       const rejected = res.results.filter((r) => r.status === 'rejected');
       this.tasks = await store.getTasks();

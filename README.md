@@ -23,7 +23,12 @@ DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 - **Reliability:** if something crashes, a friendly recovery screen appears instead of a blank page.
 - **Tasks:** create, edit, complete, and delete tasks. Each task has a title, description, due date, priority (low/medium/high), and category.
 - **Finding tasks:** search across title, description, and category. Filter by status, priority, or category, and sort by due date, priority, or newest. Overdue tasks are highlighted.
-- **Privacy:** every query is scoped to the logged-in user, so nobody can read or change another user's tasks (covered by tests). Each account also gets its own offline database on the device, and that database is erased when you log out.
+- **Shared lists (collaboration):**
+  - Create a list such as "Family" or "Team" and invite people by email. They get an email, and see the invitation when they log in or after they sign up with that address.
+  - Everyone in a list sees and edits its tasks on all their devices, and tasks can be assigned to a list member.
+  - The owner can rename the list, invite or remove people, or delete it; members can leave.
+  - Tabs: Personal, each shared list, and All. A red badge shows pending invitations.
+- **Privacy:** personal tasks are visible only to their creator; shared-list tasks only to that list's members. Nobody else can read or change them (covered by tests). Each account also gets its own offline database on the device, and that database is erased when you log out.
 - **Voice input:**
   - A microphone button turns speech into text.
   - Before the first permission prompt, a short note explains why the app needs the microphone.
@@ -164,9 +169,11 @@ Other useful commands:
 npm test
 ```
 
-There are 68 tests.
+There are 85 tests.
 
-**Server: 29 tests.** Supertest against a real in-memory MongoDB.
+**Server: 43 tests.** Supertest against a real in-memory MongoDB.
+- Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.
+- Sync with lists: a member who joins late gets the existing tasks. Removed members stop syncing. Tasks moved out of a list disappear for its other members. Deleting a list, leaving a list, and account deletion with shared lists are covered too.
 - Signup and login, including identical errors for a wrong email or wrong password so accounts can't be discovered.
 - Password hashing, tampered tokens, log out everywhere, and account deletion (requires the password, removes all tasks).
 - Task CRUD and validation, including the 200-character limit, impossible dates, unknown fields, and `$`-operator injection.
@@ -176,7 +183,9 @@ There are 68 tests.
 - Password reset: emailed single-use links, only a hash stored, expiry, the same answer for unknown emails, and other devices signed out afterwards.
 - Changing name and password, and exporting only your own data.
 
-**Client: 39 tests.** Vitest, Testing Library, and fake IndexedDB.
+**Client: 42 tests.** Vitest, Testing Library, and fake IndexedDB.
+- Shared lists are kept for offline use, and tasks from lists you've left are removed.
+- The task form's List and Assign to fields.
 - Offline queueing and later push.
 - Combining several edits to the same task into one change.
 - An edit made during an in-flight sync isn't lost.
