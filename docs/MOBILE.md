@@ -128,7 +128,7 @@ The voice button uses [`@capacitor-community/speech-recognition`](https://github
 - ✅ **Password reset**, **change password**, and **download my data** (Account page).
 - ✅ **Support page** at `/support`, for the store's *Support URL*.
 - ✅ **Privacy Policy** at `/privacy` and **Terms** at `/terms`.
-- 📝 **Business details.** Fill in `LEGAL` in [client/src/lib/brand.ts](../client/src/lib/brand.ts): support email, address, dates, providers and so on. Have a lawyer review the pages, then set `reviewedByCounsel: true`; the "Template" banner then disappears.
+- 📝 **Business details.** Fill in `LEGAL` in [client/src/lib/brand.ts](../client/src/lib/brand.ts): support email, address, dates, providers and so on. Read both pages to check they're accurate, then set `finalized: true`; the "Draft" banner then disappears. The stores require an accurate privacy policy, not a lawyer's review.
 - 📝 **Email sending (SMTP)** configured on the server, so password reset emails arrive (see [DEPLOYMENT.md](DEPLOYMENT.md)).
 - 📝 **Demo account for reviewers.** Create an account with a few tasks and give the email and password in the review notes (Apple: *App Review Information*; Google: *App access*).
 - 📝 **Screenshots:**

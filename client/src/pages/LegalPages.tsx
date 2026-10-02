@@ -15,18 +15,14 @@ function V({ k, label }: { k: LegalField; label: string }) {
   return value ? <>{value}</> : <Ph>{label}</Ph>;
 }
 
-/** A note for the owner/lawyer that disappears once the legal text is final. */
-function ReviewNote({ children }: { children: ReactNode }) {
-  return LEGAL_IS_DRAFT ? <Ph>{children}</Ph> : null;
-}
+
 
 function DraftNotice() {
   if (!LEGAL_IS_DRAFT) return null;
   return (
     <div role="note" className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100">
-      <strong>Template — not yet final.</strong> Highlighted <mark className="placeholder-mark">[PLACEHOLDERS]</mark> must be
-      completed by the app owner, and the text should be reviewed by a qualified lawyer for the jurisdictions you operate in.
-      This template is not legal advice.
+      <strong>Draft.</strong> Some details on this page (<mark className="placeholder-mark">[highlighted]</mark>) are still being
+      completed and will be updated before launch.
     </div>
   );
 }
@@ -85,8 +81,10 @@ export function PrivacyPage() {
         </li>
       </ul>
       <p>
-        Legal bases (where applicable, e.g. GDPR): performance of our contract with you, and our legitimate interests in security.{' '}
-        <ReviewNote>CONFIRM LEGAL BASES WITH COUNSEL</ReviewNote>
+        If you are in the European Economic Area, the United Kingdom or a similar jurisdiction, we process your information on these
+        legal bases: to perform our contract with you (providing your account and the App); our legitimate interests (keeping the service
+        secure, preventing abuse and fixing problems); and your consent where we ask for it (for example, microphone access, which you can
+        withdraw at any time in your browser or device settings).
       </p>
 
       <h2>Service providers</h2>
@@ -94,6 +92,13 @@ export function PrivacyPage() {
         We use the following providers to run the App, who process data on our behalf: hosting — <V k="hostingProvider" label="HOSTING PROVIDER" />; database —{' '}
         <V k="databaseProvider" label="DATABASE PROVIDER, e.g. MongoDB Atlas" />, region <V k="dataRegion" label="DATA STORAGE REGION" />; email delivery —{' '}
         <V k="emailProvider" label="EMAIL PROVIDER, e.g. Amazon SES or Postmark" />. Other providers: <V k="otherProviders" label="LIST ANY OTHER PROVIDERS, or none" />.
+      </p>
+
+      <h2>Where your data is processed</h2>
+      <p>
+        Your information is stored in the region listed above and may be processed in other countries where our service providers
+        operate, including the United States. Where the law requires it, we rely on appropriate safeguards (such as our providers'
+        standard contractual clauses) for these transfers.
       </p>
 
       <h2>Retention and deletion</h2>
@@ -118,9 +123,20 @@ export function PrivacyPage() {
         <Link to="/account" className="underline">
           Account
         </Link>
-        . To exercise other rights, contact us at <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />. <ReviewNote>ADD REGION-SPECIFIC
-        DISCLOSURES (GDPR/UK GDPR, CCPA/CPRA, etc.) IF APPLICABLE</ReviewNote>
+        . To exercise any other right, email us at <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" /> from the address linked to your
+        account. We respond within 30 days, or sooner if the law requires.
       </p>
+      <ul>
+        <li>
+          <strong>EEA and UK residents</strong> have the right to access, correct, delete, restrict or object to the processing of their
+          data, to data portability, to withdraw consent at any time, and to complain to their local data protection authority.
+        </li>
+        <li>
+          <strong>California residents</strong> have the right to know what personal information we collect and how we use it, and to
+          access, correct and delete it, without being treated differently for using these rights. We do not sell or share personal
+          information, as those terms are defined in the California Consumer Privacy Act.
+        </li>
+      </ul>
 
       <h2>Children</h2>
       <p>
@@ -195,9 +211,17 @@ export function TermsPage() {
 
       <h2>Disclaimers and limitation of liability</h2>
       <p>
-        The App is provided “as is” without warranties of any kind, to the extent permitted by law. To the extent permitted by law,
-        DewanTech is not liable for indirect or consequential losses, or for lost data.{' '}
-        <ReviewNote>HAVE COUNSEL REVIEW LIABILITY LANGUAGE FOR YOUR JURISDICTION</ReviewNote>
+        The App is provided “as is” and “as available”, without warranties of any kind, whether express or implied, including
+        warranties of merchantability, fitness for a particular purpose and non-infringement. We do not guarantee that the App will be
+        error-free or that your data will never be lost — please keep your own copy of anything important (you can download your data
+        from the Account page).
+      </p>
+      <p>
+        To the maximum extent permitted by law, DewanTech will not be liable for any indirect, incidental, special, consequential or
+        punitive damages, or for any loss of data, profits or revenue. Our total liability for any claim relating to the App is limited
+        to the greater of the amount you paid us for the App in the 12 months before the claim, or US$50. Some jurisdictions do not
+        allow certain limitations, so some of them may not apply to you; nothing in these Terms limits liability that cannot be limited
+        by law.
       </p>
 
       <h2>Governing law</h2>
@@ -208,10 +232,35 @@ export function TermsPage() {
 
       <h2>App store terms</h2>
       <p>
-        If you downloaded the App from the Apple App Store or Google Play, you also agree to that store's terms. Apple and Google are
-        not parties to these Terms and are not responsible for the App or its support. <ReviewNote>CONFIRM INCLUSION OF APPLE'S MINIMUM
-        EULA TERMS OR USE APPLE'S STANDARD EULA</ReviewNote>
+        If you downloaded the App from the Apple App Store or Google Play, you also agree to that store's terms. If you use the App on
+        an Apple device, the following also applies:
       </p>
+      <ul>
+        <li>These Terms are between you and DewanTech only, not Apple. DewanTech, not Apple, is solely responsible for the App.</li>
+        <li>
+          Your licence to use the App is limited to Apple-branded products you own or control, as permitted by the Usage Rules in the
+          Apple Media Services Terms and Conditions.
+        </li>
+        <li>Apple has no obligation to provide any maintenance or support for the App.</li>
+        <li>
+          If the App fails to conform to any applicable warranty, you may notify Apple and Apple will refund the purchase price (if any).
+          To the maximum extent permitted by law, Apple has no other warranty obligation for the App.
+        </li>
+        <li>
+          DewanTech, not Apple, is responsible for addressing any claims relating to the App, including product liability claims,
+          claims that the App fails to meet legal or regulatory requirements, consumer protection claims, and any claim that the App
+          infringes someone else's intellectual property.
+        </li>
+        <li>
+          You confirm that you are not located in a country subject to a U.S. Government embargo or designated as a “terrorist
+          supporting” country, and that you are not on any U.S. Government list of prohibited or restricted parties.
+        </li>
+        <li>You must comply with any applicable third-party terms (such as your wireless data service agreement) when using the App.</li>
+        <li>
+          Apple and its subsidiaries are third-party beneficiaries of these Terms and, once you accept them, may enforce them against
+          you.
+        </li>
+      </ul>
 
       <h2>Contact</h2>
       <p>

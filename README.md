@@ -258,7 +258,7 @@ The full design is commented in [client/src/lib/taskStore.ts](client/src/lib/tas
 Everything you need to fill in lives in one file: [client/src/lib/brand.ts](client/src/lib/brand.ts).
 
 - [ ] **`LEGAL`** in brand.ts: support and privacy email, business address, dates, hosting/email providers, data region, retention periods, minimum age, governing law and pricing. Empty values show as highlighted placeholders on the Privacy, Terms and Support pages.
-- [ ] Have a lawyer review the Privacy Policy and Terms, then set `reviewedByCounsel: true` in brand.ts. The "Template" banner disappears automatically.
+- [ ] Read the Privacy Policy and Terms yourself to check they're accurate, then set `finalized: true` in brand.ts. The "Draft" banner disappears automatically. A lawyer review is a good idea once you can afford one, but the stores don't require it.
 - [ ] `COMPANY_SITE_URL` in brand.ts.
 - [ ] [LICENSE](LICENSE): replace `[CONTACT EMAIL]`.
 - [ ] Server: set `APP_URL` and SMTP settings so password reset emails are delivered.
