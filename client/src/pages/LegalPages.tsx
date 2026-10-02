@@ -209,19 +209,36 @@ export function TermsPage() {
         Terms.
       </p>
 
-      <h2>Disclaimers and limitation of liability</h2>
+      <h2>Provided “as is”</h2>
       <p>
-        The App is provided “as is” and “as available”, without warranties of any kind, whether express or implied, including
-        warranties of merchantability, fitness for a particular purpose and non-infringement. We do not guarantee that the App will be
-        error-free or that your data will never be lost — please keep your own copy of anything important (you can download your data
-        from the Account page).
+        Like all applications and services provided by DewanTech™, the App is offered <strong>“AS IS” and “AS AVAILABLE”, without
+        warranties of any kind</strong>, whether express or implied, including any warranties of merchantability, fitness for a
+        particular purpose, accuracy, reliability or non-infringement. We do not promise that the App will always be available, will
+        be free of errors, or will meet your needs.
+      </p>
+
+      <h2>Your data and backups</h2>
+      <p>
+        You are responsible for the tasks and other content you put in the App and for keeping your own copies of anything important.
+        You can download a copy of your data at any time from the{' '}
+        <Link to="/account" className="underline">
+          Account
+        </Link>{' '}
+        page. <strong>DewanTech is not responsible for any loss, corruption or deletion of your data</strong>, for any reason —
+        including service outages, software errors, sync conflicts, problems with your device or browser, or the deletion of your
+        account.
+      </p>
+
+      <h2>Limitation of liability</h2>
+      <p>
+        To the maximum extent permitted by law, DewanTech and its owners, employees and suppliers will not be liable for any direct,
+        indirect, incidental, special, consequential or punitive damages, or for any loss of data, use, profits, revenue or goodwill,
+        arising out of or related to your use of (or inability to use) the App, even if we have been told such damages are possible.
       </p>
       <p>
-        To the maximum extent permitted by law, DewanTech will not be liable for any indirect, incidental, special, consequential or
-        punitive damages, or for any loss of data, profits or revenue. Our total liability for any claim relating to the App is limited
-        to the greater of the amount you paid us for the App in the 12 months before the claim, or US$50. Some jurisdictions do not
-        allow certain limitations, so some of them may not apply to you; nothing in these Terms limits liability that cannot be limited
-        by law.
+        Our total liability for any claim relating to the App is limited to the amount you paid DewanTech for the App in the 12 months
+        before the claim. While the App is free, that amount is zero. Some places do not allow certain warranties or liabilities to be
+        excluded or limited; where that applies, our liability is limited to the smallest amount the law allows.
       </p>
 
       <h2>Governing law</h2>
@@ -229,38 +246,6 @@ export function TermsPage() {
         These Terms are governed by the laws of <V k="governingLaw" label="GOVERNING JURISDICTION" />. Disputes will be resolved in{' '}
         <V k="disputeVenue" label="VENUE / DISPUTE RESOLUTION METHOD" />.
       </p>
-
-      <h2>App store terms</h2>
-      <p>
-        If you downloaded the App from the Apple App Store or Google Play, you also agree to that store's terms. If you use the App on
-        an Apple device, the following also applies:
-      </p>
-      <ul>
-        <li>These Terms are between you and DewanTech only, not Apple. DewanTech, not Apple, is solely responsible for the App.</li>
-        <li>
-          Your licence to use the App is limited to Apple-branded products you own or control, as permitted by the Usage Rules in the
-          Apple Media Services Terms and Conditions.
-        </li>
-        <li>Apple has no obligation to provide any maintenance or support for the App.</li>
-        <li>
-          If the App fails to conform to any applicable warranty, you may notify Apple and Apple will refund the purchase price (if any).
-          To the maximum extent permitted by law, Apple has no other warranty obligation for the App.
-        </li>
-        <li>
-          DewanTech, not Apple, is responsible for addressing any claims relating to the App, including product liability claims,
-          claims that the App fails to meet legal or regulatory requirements, consumer protection claims, and any claim that the App
-          infringes someone else's intellectual property.
-        </li>
-        <li>
-          You confirm that you are not located in a country subject to a U.S. Government embargo or designated as a “terrorist
-          supporting” country, and that you are not on any U.S. Government list of prohibited or restricted parties.
-        </li>
-        <li>You must comply with any applicable third-party terms (such as your wireless data service agreement) when using the App.</li>
-        <li>
-          Apple and its subsidiaries are third-party beneficiaries of these Terms and, once you accept them, may enforce them against
-          you.
-        </li>
-      </ul>
 
       <h2>Contact</h2>
       <p>
