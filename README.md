@@ -252,3 +252,9 @@ Search the code for `<Ph>` and `PLACEHOLDER`.
 - [ ] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` (permanent after the first store release) and `appName`.
 - [x] Icons and splash screens are generated from your logos in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
 - [ ] `server/.env`: a real `JWT_SECRET`, production `MONGODB_URI`, and `CORS_ORIGINS`.
+
+## License
+
+© 2026 Dewan Global LLC dba DewanTech™. All rights reserved.
+
+This repository is public for viewing only. You may not use, copy, modify or distribute the code, logos or branding without written permission. See [LICENSE](LICENSE).

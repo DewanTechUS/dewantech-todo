@@ -2,6 +2,7 @@
   "name": "donext",
   "version": "1.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "DoNext — full-stack, offline-first, installable task manager",
   "workspaces": [
     "server",
