@@ -36,7 +36,7 @@ describe('Header mobile menu', () => {
     expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Terms of Service' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: /DewanTech.com/ })).toBeInTheDocument();
-    expect(within(menu).getByText(/© \d{4} Dewan Global LLC dba DewanTech™/)).toBeInTheDocument();
+    expect(within(menu).getByText(/© \d{4} Dewan Global LLC DBA DewanTech™/)).toBeInTheDocument();
     expect(within(menu).getByText('Technology Built with Purpose.')).toBeInTheDocument();
     expect(menu).toContainElement(document.activeElement as HTMLElement);
   });

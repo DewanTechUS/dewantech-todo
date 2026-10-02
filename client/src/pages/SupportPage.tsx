@@ -88,13 +88,32 @@ export default function SupportPage() {
           Still need help?
         </h2>
         {email ? (
-          <p className="text-slate-600 dark:text-slate-300">
-            Email us at{' '}
-            <a href={`mailto:${email}?subject=${encodeURIComponent(`${APP_NAME} support`)}`} className="font-semibold text-brand-700 underline dark:text-brand-300">
-              {email}
-            </a>
-            . We usually reply within two business days.
-          </p>
+          <>
+            <dl className="grid gap-x-4 gap-y-1 text-slate-600 dark:text-slate-300 sm:grid-cols-[10rem_1fr]">
+              <dt className="font-medium text-slate-800 dark:text-slate-100">Support</dt>
+              <dd>
+                <a
+                  href={`mailto:${email}?subject=${encodeURIComponent(`${APP_NAME} support`)}`}
+                  className="font-semibold text-brand-700 underline dark:text-brand-300"
+                >
+                  {email}
+                </a>
+              </dd>
+              {LEGAL.infoEmail && (
+                <>
+                  <dt className="font-medium text-slate-800 dark:text-slate-100">General information</dt>
+                  <dd>
+                    <a href={`mailto:${LEGAL.infoEmail}`} className="font-semibold text-brand-700 underline dark:text-brand-300">
+                      {LEGAL.infoEmail}
+                    </a>
+                  </dd>
+                </>
+              )}
+            </dl>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              We aim to respond within a reasonable timeframe. Response times are not guaranteed.
+            </p>
+          </>
         ) : (
           <p className="text-slate-600 dark:text-slate-300">
             Email us at <mark className="placeholder-mark">[SUPPORT CONTACT EMAIL — set LEGAL.supportEmail in client/src/lib/brand.ts]</mark>.

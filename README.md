@@ -268,6 +268,6 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 
 ## License
 
-© 2026 Dewan Global LLC dba DewanTech™. All rights reserved.
+© 2026 Dewan Global LLC DBA DewanTech™. All rights reserved.
 
 This repository is public for viewing only. You may not use, copy, modify or distribute the code, logos or branding without written permission. See [LICENSE](LICENSE).

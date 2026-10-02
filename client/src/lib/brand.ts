@@ -1,7 +1,7 @@
 /** Product and company branding, in one place. */
 export const APP_NAME = 'DoNext';
 export const COMPANY_NAME = 'DewanTech™';
-export const COMPANY_LEGAL_NAME = 'Dewan Global LLC dba DewanTech™';
+export const COMPANY_LEGAL_NAME = 'Dewan Global LLC DBA DewanTech™';
 export const SLOGAN = 'Technology Built with Purpose.';
 export const COPYRIGHT = `© ${new Date().getFullYear()} ${COMPANY_LEGAL_NAME}`;
 
@@ -18,8 +18,9 @@ export const LEGAL = {
   effectiveDate: '', // e.g. 'November 1, 2026'
   lastUpdated: '', // e.g. 'November 1, 2026'
   businessAddress: '', // registered business address
-  supportEmail: '', // e.g. 'support@dewantech.com'
-  privacyEmail: '', // e.g. 'privacy@dewantech.com' (can be the same as support)
+  supportEmail: 'support@dewantech.com',
+  infoEmail: 'info@dewantech.com', // general information and licensing
+  privacyEmail: 'support@dewantech.com', // use a dedicated privacy@ address here if you create one
   hostingProvider: '', // where the API runs, e.g. 'Render' or 'DigitalOcean'
   databaseProvider: 'MongoDB Atlas',
   dataRegion: '', // e.g. 'United States (AWS us-east-1)'
