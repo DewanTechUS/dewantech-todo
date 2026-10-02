@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Alert } from '../components/Alert';
 import { FilterBar } from '../components/FilterBar';
 import { PlusIcon } from '../components/Icons';
@@ -19,6 +20,8 @@ export default function TasksPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const location = useLocation();
+  const [passwordReset, setPasswordReset] = useState(() => Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset));
 
   const categories = useMemo(() => categoriesOf(tasks), [tasks]);
   const visible = useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
@@ -60,6 +63,11 @@ export default function TasksPage() {
           <button type="button" className="font-semibold underline" onClick={() => void store.syncNow()}>
             Retry
           </button>
+        </Alert>
+      )}
+      {passwordReset && (
+        <Alert kind="success" onDismiss={() => setPasswordReset(false)}>
+          Your password has been changed and you're signed in. Other devices have been signed out.
         </Alert>
       )}
       {actionError && <Alert onDismiss={() => setActionError(null)}>{actionError}</Alert>}

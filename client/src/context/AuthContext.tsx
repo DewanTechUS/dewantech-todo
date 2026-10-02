@@ -18,6 +18,11 @@ interface AuthValue {
   logout: () => Promise<void>;
   logoutEverywhere: () => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
+  /** Completes a password reset from an emailed link and signs in. */
+  resetPassword: (resetToken: string, password: string) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
+  /** Changes the password; other devices are signed out, this one stays signed in. */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   markExpired: () => void;
 }
 
@@ -86,6 +91,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clear(session.user.id);
       },
       markExpired,
+      resetPassword: async (resetToken, password) => start(await api.resetPassword(resetToken, password)),
+      updateName: async (name) => {
+        if (!session) return;
+        const { user } = await api.updateProfile(session.token, name);
+        const next = { ...session, user };
+        storage.set(KEYS.session, next);
+        setSession(next);
+      },
+      changePassword: async (currentPassword, newPassword) => {
+        if (!session) return;
+        start(await api.changePassword(session.token, currentPassword, newPassword));
+      },
     }),
     [status, session, sessionExpired, start, clear, markExpired],
   );

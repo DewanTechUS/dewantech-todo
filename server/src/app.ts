@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
 import type { Config } from './config.js';
+import { createMailer, type Mailer } from './lib/mailer.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { authRouter } from './routes/auth.js';
 import { tasksRouter } from './routes/tasks.js';
@@ -13,6 +14,8 @@ import { tasksRouter } from './routes/tasks.js';
 export interface AppOptions {
   /** Max auth attempts per IP per 15 minutes. */
   authRateLimit?: number;
+  /** Email sender; defaults to SMTP from config (or console logging when SMTP is not configured). */
+  mailer?: Mailer;
   /** Directory containing the built client (index.html). */
   clientDir?: string;
 }
@@ -55,7 +58,7 @@ export function createApp(config: Config, opts: AppOptions = {}): Express {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
   });
-  app.use('/api/auth', authRouter(config, { authRateLimit: opts.authRateLimit ?? 20 }));
+  app.use('/api/auth', authRouter(config, { authRateLimit: opts.authRateLimit ?? 20, mailer: opts.mailer ?? createMailer(config) }));
   app.use('/api/tasks', tasksRouter(config));
   app.use('/api', notFound);
 

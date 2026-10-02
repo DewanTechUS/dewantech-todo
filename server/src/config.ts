@@ -20,6 +20,23 @@ const envSchema = z.object({
     .default('false')
     .transform((v) => v === 'true'),
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+
+  // Public URL of the web app, used in emails (e.g. password reset links).
+  APP_URL: z
+    .string()
+    .url()
+    .default('http://localhost:5173')
+    .transform((u) => u.replace(/\/$/, '')),
+  // Outgoing email (SMTP). If SMTP_HOST is empty, emails are printed to the server log instead (development).
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true'),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  MAIL_FROM: z.string().default('DoNext <no-reply@dewantech.com>'),
 });
 
 export type Config = z.infer<typeof envSchema>;

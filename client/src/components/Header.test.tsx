@@ -32,6 +32,7 @@ describe('Header mobile menu', () => {
     expect(within(menu).getByRole('link', { name: 'Log in' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Create free account' })).toBeInTheDocument();
     expect(within(menu).getByRole('group', { name: 'Color theme' })).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Help & Support' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Terms of Service' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: /DewanTech.com/ })).toBeInTheDocument();

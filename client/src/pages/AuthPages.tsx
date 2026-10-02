@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Alert } from '../components/Alert';
 import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
-import { ApiError } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 
 function AuthCard({ title, subtitle, children }: { title: string; subtitle: ReactNode; children: ReactNode }) {
   return (
@@ -143,9 +143,135 @@ export function LoginPage() {
           autoComplete="current-password"
           error={fields.password}
         />
+        <div className="-mt-1 text-right">
+          <Link to="/forgot-password" className="text-sm font-semibold text-brand-700 underline dark:text-brand-300">
+            Forgot password?
+          </Link>
+        </div>
         <button type="submit" className="btn-primary w-full" disabled={busy}>
           {busy && <Spinner className="h-4 w-4" label="Logging in" />}
           Log in
+        </button>
+      </form>
+    </AuthCard>
+  );
+}
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter the email address you signed up with.');
+    setBusy(true);
+    setError(null);
+    try {
+      const { message } = await api.forgotPassword(email.trim());
+      setSent(message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AuthCard title="Reset your password" subtitle="Enter your email and we'll send you a link to choose a new password.">
+      {sent ? (
+        <div className="space-y-4">
+          <Alert kind="success">{sent} Check your inbox (and spam folder). The link expires in 60 minutes.</Alert>
+          <Link to="/login" className="btn-secondary w-full">
+            Back to log in
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
+          {error && <Alert>{error}</Alert>}
+          <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
+          <button type="submit" className="btn-primary w-full" disabled={busy}>
+            {busy && <Spinner className="h-4 w-4" label="Sending" />}
+            Send reset link
+          </button>
+          <p className="text-center text-sm">
+            <Link to="/login" className="font-semibold text-brand-700 underline dark:text-brand-300">
+              Back to log in
+            </Link>
+          </p>
+        </form>
+      )}
+    </AuthCard>
+  );
+}
+
+export function ResetPasswordPage() {
+  const { resetPassword } = useAuth();
+  const navigate = useNavigate();
+  const token = new URLSearchParams(useLocation().search).get('token') ?? '';
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fields, setFields] = useState<Record<string, string>>({});
+
+  if (!/^[a-f0-9]{64}$/.test(token)) {
+    return (
+      <AuthCard title="Link not valid" subtitle="This password reset link is incomplete or has expired.">
+        <Link to="/forgot-password" className="btn-primary w-full">
+          Request a new link
+        </Link>
+      </AuthCard>
+    );
+  }
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setFields({});
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password))
+      return setError('Password must be at least 8 characters and include a letter and a number.');
+    if (password !== confirm) return setError("The two passwords don't match.");
+    setBusy(true);
+    setError(null);
+    try {
+      await resetPassword(token, password);
+      navigate('/', { replace: true, state: { passwordReset: true } });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setFields(err.fields);
+      } else setError('Something went wrong. Please try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AuthCard title="Choose a new password" subtitle="You'll be signed in, and signed out on all your other devices.">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
+        {error && (
+          <Alert>
+            {error}{' '}
+            {/expired|invalid/i.test(error) && (
+              <Link to="/forgot-password" className="font-semibold underline">
+                Request a new link
+              </Link>
+            )}
+          </Alert>
+        )}
+        <Field
+          label="New password"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="new-password"
+          error={fields.password}
+          hint="At least 8 characters, including a letter and a number."
+        />
+        <Field label="Confirm new password" type="password" value={confirm} onChange={setConfirm} autoComplete="new-password" />
+        <button type="submit" className="btn-primary w-full" disabled={busy}>
+          {busy && <Spinner className="h-4 w-4" label="Saving" />}
+          Save new password
         </button>
       </form>
     </AuthCard>

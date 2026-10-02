@@ -64,5 +64,13 @@ export const api = {
   logoutAll: (token: string) => apiFetch<void>('/api/auth/logout-all', { method: 'POST', token }),
   deleteAccount: (token: string, password: string) =>
     apiFetch<void>('/api/auth/me', { method: 'DELETE', token, body: { password } }),
+  forgotPassword: (email: string) =>
+    apiFetch<{ message: string }>('/api/auth/forgot-password', { method: 'POST', body: { email } }),
+  resetPassword: (token: string, password: string) =>
+    apiFetch<Session>('/api/auth/reset-password', { method: 'POST', body: { token, password } }),
+  updateProfile: (token: string, name: string) => apiFetch<{ user: User }>('/api/auth/me', { method: 'PATCH', token, body: { name } }),
+  changePassword: (token: string, currentPassword: string, newPassword: string) =>
+    apiFetch<Session>('/api/auth/change-password', { method: 'POST', token, body: { currentPassword, newPassword } }),
+  exportData: (token: string) => apiFetch<unknown>('/api/auth/export', { token }),
   sync: (token: string, body: SyncRequest) => apiFetch<SyncResponse>('/api/tasks/sync', { method: 'POST', token, body }),
 };

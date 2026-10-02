@@ -5,7 +5,7 @@ DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite, installable PWA
 - **Backend:** Node.js, Express 5, TypeScript, Zod validation
 - **Database:** MongoDB with Mongoose
-- **Mobile:** Capacitor 7, packaged for iOS and Android
+- **Mobile:** Capacitor 8 native projects for iOS and Android (targets Android API 36, iOS 15+)
 
 | Guide | What it covers |
 | --- | --- |
@@ -17,7 +17,9 @@ DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 
 ## Features
 
-- **Accounts:** sign up, log in, log out, log out of all devices, and delete your account (asks for your password again).
+- **Accounts:** sign up, log in, log out, log out of all devices, forgot/reset password by email, edit your name, change your password, download all your data as JSON, and delete your account (asks for your password again).
+- **Public pages:** a landing page for visitors, Help & Support (FAQ and contact), Privacy Policy and Terms.
+- **Reliability:** if something crashes, a friendly recovery screen appears instead of a blank page.
 - **Tasks:** create, edit, complete, and delete tasks. Each task has a title, description, due date, priority (low/medium/high), and category.
 - **Finding tasks:** search across title, description, and category. Filter by status, priority, or category, and sort by due date, priority, or newest. Overdue tasks are highlighted.
 - **Privacy:** every query is scoped to the logged-in user, so nobody can read or change another user's tasks (covered by tests). Each account also gets its own offline database on the device, and that database is erased when you log out.
@@ -67,6 +69,8 @@ dt_to_do/
 │  └─ test/                auth, tasks/privacy/CORS, sync conflict tests
 └─ client/
    ├─ capacitor.config.ts  native app id/name
+   ├─ android/, ios/       native projects (open in Android Studio / Xcode)
+   ├─ native/ios/          iOS privacy manifest template
    ├─ vite.config.ts       PWA manifest + service worker
    ├─ scripts/configure-native.mjs  adds mic/speech permissions to native projects
    ├─ assets/              icon/splash sources for @capacitor/assets
@@ -80,7 +84,7 @@ dt_to_do/
 
 ## Prerequisites
 
-- **Node.js 20.11 or later** (22 LTS recommended), with npm 10 or later.
+- **Node.js 22 or later**, with npm 10 or later.
 - **MongoDB:** one of the three options below.
 - **Mobile builds only:**
   - Android: Android Studio.
@@ -159,17 +163,19 @@ Other useful commands:
 npm test
 ```
 
-There are 50 tests.
+There are 68 tests.
 
-**Server: 23 tests.** Supertest against a real in-memory MongoDB.
+**Server: 29 tests.** Supertest against a real in-memory MongoDB.
 - Signup and login, including identical errors for a wrong email or wrong password so accounts can't be discovered.
 - Password hashing, tampered tokens, log out everywhere, and account deletion (requires the password, removes all tasks).
 - Task CRUD and validation, including the 200-character limit, impossible dates, unknown fields, and `$`-operator injection.
 - Privacy between users, search with regex characters escaped, and filters.
 - Sync: idempotent retries, last-write-wins conflicts, clamping of future clock times, deletions reaching other devices and staying deleted, partial rejection, cross-user overwrite attempts, and batch limits.
 - CORS allow-list and security headers.
+- Password reset: emailed single-use links, only a hash stored, expiry, the same answer for unknown emails, and other devices signed out afterwards.
+- Changing name and password, and exporting only your own data.
 
-**Client: 27 tests.** Vitest, Testing Library, and fake IndexedDB.
+**Client: 39 tests.** Vitest, Testing Library, and fake IndexedDB.
 - Offline queueing and later push.
 - Combining several edits to the same task into one change.
 - An edit made during an in-flight sync isn't lost.
@@ -179,6 +185,7 @@ There are 50 tests.
 - Filtering and sorting.
 - The voice flow: explainer, editable preview, denied permission, nothing heard, and the unsupported-browser fallback.
 - Form validation and accessibility.
+- The mobile menu, forgot/reset password pages, landing page and support page.
 
 The first server test run downloads a MongoDB binary of about 70 MB. On Windows, that binary needs the Visual C++ Redistributable.
 
@@ -195,6 +202,9 @@ The first server test run downloads a MongoDB binary of about 70 MB. On Windows,
 | `CORS_ORIGINS` | no | Comma-separated origins allowed to call the API. Add `capacitor://localhost,https://localhost` for the native apps |
 | `SERVE_CLIENT` | no | `true` makes Express serve `client/dist` as well (single-server deploy) |
 | `TRUST_PROXY` | no | Number of reverse proxies in front of Express (needed for correct rate limiting behind Nginx or a PaaS) |
+| `APP_URL` | production | Public URL of the web app, including any sub-path. Used in password reset links |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | production | Outgoing email for password resets. If `SMTP_HOST` is empty, emails are printed in the server log instead (development only) |
+| `MAIL_FROM` | no | Sender shown on emails (default `DoNext <no-reply@dewantech.com>`) |
 | `NODE_ENV` | no | `production` in production |
 
 **Client** (`client/.env`, `client/.env.mobile`; templates: [client/.env.example](client/.env.example), [client/.env.mobile.example](client/.env.mobile.example)). These values are embedded in public JavaScript, so never put secrets here.
@@ -245,10 +255,13 @@ The full design is commented in [client/src/lib/taskStore.ts](client/src/lib/tas
 
 ## Before going public: placeholders checklist
 
-Search the code for `<Ph>` and `PLACEHOLDER`.
+Everything you need to fill in lives in one file: [client/src/lib/brand.ts](client/src/lib/brand.ts).
 
-- [ ] [client/src/pages/LegalPages.tsx](client/src/pages/LegalPages.tsx): the company name is filled in (Dewan Global LLC dba DewanTech™); fill in the address, contact emails, dates, hosting and database providers, data region, retention periods, minimum age, governing law, and pricing. Then **have a lawyer review the text.**
-- [ ] [client/src/lib/brand.ts](client/src/lib/brand.ts): confirm `COMPANY_SITE_URL`. App name, legal name, slogan and copyright are also set here.
+- [ ] **`LEGAL`** in brand.ts: support and privacy email, business address, dates, hosting/email providers, data region, retention periods, minimum age, governing law and pricing. Empty values show as highlighted placeholders on the Privacy, Terms and Support pages.
+- [ ] Have a lawyer review the Privacy Policy and Terms, then set `reviewedByCounsel: true` in brand.ts. The "Template" banner disappears automatically.
+- [ ] `COMPANY_SITE_URL` in brand.ts.
+- [ ] [LICENSE](LICENSE): replace `[CONTACT EMAIL]`.
+- [ ] Server: set `APP_URL` and SMTP settings so password reset emails are delivered.
 - [ ] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` (permanent after the first store release) and `appName`.
 - [x] Icons and splash screens are generated from your logos in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
 - [ ] `server/.env`: a real `JWT_SECRET`, production `MONGODB_URI`, and `CORS_ORIGINS`.

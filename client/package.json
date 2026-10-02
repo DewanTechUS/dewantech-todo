@@ -16,20 +16,20 @@
     "cap:ios": "npm run cap:sync && cap open ios",
     "build:mobile": "tsc --noEmit && vite build --mode mobile",
     "cap:configure": "node scripts/configure-native.mjs",
-    "cap:assets": "npx @capacitor/assets generate --iconBackgroundColor \"#4f46e5\" --iconBackgroundColorDark \"#0f172a\" --splashBackgroundColor \"#ffffff\" --splashBackgroundColorDark \"#0f172a\""
+    "cap:assets": "npx @capacitor/assets generate --android --ios --iconBackgroundColor \"#012360\" --iconBackgroundColorDark \"#012360\" --splashBackgroundColor \"#012360\" --splashBackgroundColorDark \"#012360\""
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.0",
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "idb": "^8.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.0.0",
+    "@capacitor/cli": "^8.5.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",

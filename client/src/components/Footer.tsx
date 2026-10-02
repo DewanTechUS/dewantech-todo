@@ -12,6 +12,9 @@ export function Footer() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-4 py-6">
         <CompanyCredit />
         <nav aria-label="Legal" className="flex shrink-0 gap-1">
+          <Link to="/support" className={linkClass}>
+            Help & Support
+          </Link>
           <Link to="/privacy" className={linkClass}>
             Privacy Policy
           </Link>

@@ -6,6 +6,7 @@ import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { api, ApiError } from '../lib/api';
 
 export default function AccountPage() {
   const { user, logout, logoutEverywhere, deleteAccount } = useAuth();
@@ -62,28 +63,9 @@ export default function AccountPage() {
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Account</h1>
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
-      <section className="card p-5" aria-labelledby="profile-h">
-        <h2 id="profile-h" className="mb-3 text-lg font-semibold">
-          Profile
-        </h2>
-        <dl className="grid gap-2 text-sm sm:grid-cols-[8rem_1fr]">
-          <dt className="text-slate-500 dark:text-slate-400">Name</dt>
-          <dd className="font-medium">{user.name}</dd>
-          <dt className="text-slate-500 dark:text-slate-400">Email</dt>
-          <dd className="break-all font-medium">{user.email}</dd>
-          <dt className="text-slate-500 dark:text-slate-400">Member since</dt>
-          <dd className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</dd>
-          <dt className="text-slate-500 dark:text-slate-400">Sync</dt>
-          <dd className="font-medium">
-            {sync.pending ? `${sync.pending} change(s) waiting to sync` : 'All changes synced'}
-            {sync.lastSyncedAt && (
-              <span className="block text-slate-500 dark:text-slate-400">
-                Last synced {new Date(sync.lastSyncedAt).toLocaleString()}
-              </span>
-            )}
-          </dd>
-        </dl>
-      </section>
+      <ProfileSection />
+      <PasswordSection />
+      <DataSection />
 
       <section className="card space-y-3 p-5" aria-labelledby="session-h">
         <h2 id="session-h" className="text-lg font-semibold">
@@ -161,5 +143,202 @@ export default function AccountPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+function ProfileSection() {
+  const { user, updateName } = useAuth();
+  const { sync } = useTasks();
+  const online = useOnlineStatus();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(user?.name ?? '');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ kind: 'error' | 'success'; text: string } | null>(null);
+  const nameId = useId();
+  if (!user) return null;
+
+  const onSave = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return setMessage({ kind: 'error', text: 'Name is required.' });
+    setBusy(true);
+    setMessage(null);
+    try {
+      await updateName(name.trim());
+      setEditing(false);
+      setMessage({ kind: 'success', text: 'Name updated.' });
+    } catch (err) {
+      setMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Could not update your name.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card space-y-3 p-5" aria-labelledby="profile-h">
+      <h2 id="profile-h" className="text-lg font-semibold">
+        Profile
+      </h2>
+      {message && (
+        <Alert kind={message.kind} onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
+      {editing ? (
+        <form onSubmit={onSave} className="flex flex-col gap-2 sm:flex-row sm:items-end" noValidate>
+          <div className="flex-1">
+            <label htmlFor={nameId} className="label">
+              Name
+            </label>
+            <input id={nameId} className="input" value={name} maxLength={80} autoComplete="name" onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="btn-primary flex-1" disabled={busy || !online}>
+              {busy && <Spinner className="h-4 w-4" />}
+              Save
+            </button>
+            <button
+              type="button"
+              className="btn-secondary flex-1"
+              onClick={() => {
+                setEditing(false);
+                setName(user.name);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : null}
+      <dl className="grid gap-2 text-sm sm:grid-cols-[8rem_1fr]">
+        {!editing && (
+          <>
+            <dt className="text-slate-500 dark:text-slate-400">Name</dt>
+            <dd className="flex items-center justify-between gap-2 font-medium">
+              {user.name}
+              <button type="button" className="btn-ghost min-h-[36px] text-sm" onClick={() => setEditing(true)} disabled={!online}>
+                Edit
+              </button>
+            </dd>
+          </>
+        )}
+        <dt className="text-slate-500 dark:text-slate-400">Email</dt>
+        <dd className="break-all font-medium">{user.email}</dd>
+        <dt className="text-slate-500 dark:text-slate-400">Member since</dt>
+        <dd className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</dd>
+        <dt className="text-slate-500 dark:text-slate-400">Sync</dt>
+        <dd className="font-medium">
+          {sync.pending ? `${sync.pending} change(s) waiting to sync` : 'All changes synced'}
+          {sync.lastSyncedAt && (
+            <span className="block text-slate-500 dark:text-slate-400">Last synced {new Date(sync.lastSyncedAt).toLocaleString()}</span>
+          )}
+        </dd>
+      </dl>
+    </section>
+  );
+}
+
+function PasswordSection() {
+  const { changePassword } = useAuth();
+  const online = useOnlineStatus();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ kind: 'error' | 'success'; text: string } | null>(null);
+  const currentId = useId();
+  const nextId = useId();
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!current) return setMessage({ kind: 'error', text: 'Enter your current password.' });
+    if (next.length < 8 || !/[A-Za-z]/.test(next) || !/\d/.test(next))
+      return setMessage({ kind: 'error', text: 'New password must be at least 8 characters and include a letter and a number.' });
+    setBusy(true);
+    setMessage(null);
+    try {
+      await changePassword(current, next);
+      setCurrent('');
+      setNext('');
+      setMessage({ kind: 'success', text: 'Password changed. Your other devices have been signed out.' });
+    } catch (err) {
+      setMessage({ kind: 'error', text: err instanceof ApiError || err instanceof Error ? err.message : 'Could not change password.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card space-y-3 p-5" aria-labelledby="password-h">
+      <h2 id="password-h" className="text-lg font-semibold">
+        Password
+      </h2>
+      {message && (
+        <Alert kind={message.kind} onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
+      <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2" noValidate>
+        <div>
+          <label htmlFor={currentId} className="label">
+            Current password
+          </label>
+          <input id={currentId} type="password" className="input" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor={nextId} className="label">
+            New password
+          </label>
+          <input id={nextId} type="password" className="input" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
+        </div>
+        <div className="sm:col-span-2">
+          <button type="submit" className="btn-secondary w-full sm:w-auto" disabled={busy || !online}>
+            {busy && <Spinner className="h-4 w-4" />}
+            Change password
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function DataSection() {
+  const { token } = useAuth();
+  const online = useOnlineStatus();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onExport = async () => {
+    if (!token) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const data = await api.exportData(token);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `donext-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not download your data.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card space-y-3 p-5" aria-labelledby="data-h">
+      <h2 id="data-h" className="text-lg font-semibold">
+        Your data
+      </h2>
+      <p className="text-sm text-slate-600 dark:text-slate-400">Download a copy of your account details and all your tasks as a JSON file.</p>
+      {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+      <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => void onExport()} disabled={busy || !online}>
+        {busy && <Spinner className="h-4 w-4" />}
+        Download my data
+      </button>
+    </section>
   );
 }

@@ -7,6 +7,9 @@ const userSchema = new Schema(
     passwordHash: { type: String, required: true, select: false },
     // Incrementing this invalidates every JWT issued before (used for "log out everywhere").
     tokenVersion: { type: Number, default: 0 },
+    // SHA-256 of a single-use password reset token (the raw token is only ever emailed).
+    passwordResetHash: { type: String, select: false, index: { sparse: true } },
+    passwordResetExpires: { type: Date, select: false },
   },
   { timestamps: true },
 );

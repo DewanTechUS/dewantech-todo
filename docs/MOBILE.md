@@ -1,8 +1,23 @@
 # iOS and Android apps (Capacitor)
 
-The same React app is packaged as native iOS and Android apps with **Capacitor 7**. The native shell loads the built web files from inside the app and calls your deployed API over HTTPS.
+DoNext is packaged as native iOS and Android apps with **Capacitor 8**. The native shell loads the built web files from inside the app and calls your deployed API over HTTPS.
 
 > **Nothing has been submitted to Apple or Google.** This guide explains how *you* build, sign, and submit the apps. Every step that needs a developer account, a signing key, or a store dashboard is marked 🔑. Store approval is decided by Apple and Google and is not guaranteed.
+
+## What's already set up
+
+| | Status |
+| --- | --- |
+| Android project (`client/android/`) | ✅ Created. Targets **API 36 (Android 16)**, as Google Play has required for new apps and updates since August 31, 2026. Minimum Android 7.0 (API 24). |
+| iOS project (`client/ios/`) | ✅ Created, using CocoaPods. Minimum iOS 15. |
+| App ID / bundle ID | ✅ `com.dewantech.donext`. It can still change until your first store release, but never after. |
+| App name | ✅ DoNext |
+| App icons and splash screens | ✅ Generated from your DoNext logo for both platforms |
+| Microphone and speech permissions | ✅ iOS usage descriptions and Android `RECORD_AUDIO` added |
+| iOS privacy manifest (`PrivacyInfo.xcprivacy`) | ✅ Added and registered in the Xcode project |
+| Version | ✅ 1.0.0, build 1 |
+
+These projects were generated on Windows. Neither has been compiled yet, because that needs Android Studio (Android) and a Mac with Xcode (iOS).
 
 ---
 
@@ -11,38 +26,22 @@ The same React app is packaged as native iOS and Android apps with **Capacitor 7
 | | Android | iOS |
 | --- | --- | --- |
 | Computer | Windows, macOS, or Linux | **macOS only** |
-| Tools | Android Studio (current stable) with Android SDK and **JDK 21** | **Xcode 16 or later** (use the current release Apple requires for uploads), plus Xcode command line tools |
-| Device for testing | Android 6.0 (API 23) or later | iOS 14 or later |
-| 🔑 Account to publish | Google Play Console: one-time US$25 registration fee | Apple Developer Program: US$99 per year |
+| Tools | **Android Studio Otter (2025.2.1) or later**, with Android SDK 36 and JDK 21 (bundled with Android Studio) | **Xcode 26 or later** and **CocoaPods** (`sudo gem install cocoapods` or `brew install cocoapods`) |
+| Device for testing | Android 7.0 or later | iOS 15 or later |
+| 🔑 Account to publish | Google Play Console: one-time US$25 fee | Apple Developer Program: US$99 per year |
 
-Your API must already be deployed on HTTPS (see [DEPLOYMENT.md](DEPLOYMENT.md)). Native apps can't use `localhost` on your PC.
+You also need:
+- Node.js 22 or later.
+- Your API deployed on HTTPS (see [DEPLOYMENT.md](DEPLOYMENT.md)). Native apps can't reach `localhost` on your PC.
 
-## 2. One-time setup
-
-All of these commands run from the `client/` folder.
+## 2. Point the app at your live API (once)
 
 ```bash
 cd client
-
-# a) Point the mobile build at your live API
-cp .env.mobile.example .env.mobile    # then edit VITE_API_URL=https://donext.dewantech.com
-
-# b) Choose your permanent app id (reverse domain you control) in capacitor.config.ts
-#    appId: 'com.dewantech.donext'  ← cannot change after the first store release
-
-# c) Build the web app and create the native projects
-npm run build:mobile
-npx cap add android
-npx cap add ios          # macOS only
-
-# d) Add microphone + speech permissions to the native projects (idempotent)
-npm run cap:configure
-
-# e) Generate app icons and splash screens from client/assets/
-npm run cap:assets
+cp .env.mobile.example .env.mobile      # then set VITE_API_URL=https://donext.dewantech.com
 ```
 
-On the server, add the native origins to `CORS_ORIGINS`:
+On the server, add the native app origins to `CORS_ORIGINS`:
 
 ```ini
 CORS_ORIGINS=https://donext.dewantech.com,capacitor://localhost,https://localhost
@@ -51,125 +50,118 @@ CORS_ORIGINS=https://donext.dewantech.com,capacitor://localhost,https://localhos
 - `capacitor://localhost` is the iOS app's origin.
 - `https://localhost` is the Android app's origin.
 
-The `android/` and `ios/` folders are generated, and the repo's `.gitignore` excludes them. If you customise native code (signing settings, extra plugins), remove those lines from `.gitignore` and commit the folders.
+## 3. Build and run
 
-## 3. Day-to-day build and run
+From `client/`:
 
 ```bash
-npm run cap:android   # build → sync → configure permissions → open Android Studio
-npm run cap:ios       # build → sync → configure permissions → open Xcode
+npm run cap:android   # builds the web app → copies it into Android → opens Android Studio
+npm run cap:ios       # same for iOS → runs pod install → opens Xcode (Mac only)
 ```
 
-- **Android Studio:** pick a device or emulator and press ▶ Run.
+- **Android Studio:** wait for the Gradle sync to finish, pick a device or emulator, then press ▶ Run.
 - **Xcode:**
-  1. Select the **App** target.
-  2. Under **Signing & Capabilities**, choose your 🔑 Team (you can test on your own device with a free Apple ID).
+  1. Open the **App** target.
+  2. Under **Signing & Capabilities**, choose your 🔑 Team. A free Apple ID is enough for testing on your own iPhone.
   3. Pick a device and press ▶.
 
-Re-run the same command after every web change.
+Re-run the same command after every change to the web code.
+
+**Useful commands:**
+- `npm run cap:assets` regenerates icons and splash screens after you change `client/assets/`.
+- `npm run cap:configure` re-applies permissions and the privacy manifest. It's safe to run any time.
 
 ## Microphone and speech permissions
 
-The voice button uses [`@capacitor-community/speech-recognition`](https://github.com/capacitor-community/speech-recognition), which uses the operating system's speech recognizer.
-
-`npm run cap:configure` ([client/scripts/configure-native.mjs](../client/scripts/configure-native.mjs)) adds the following:
+The voice button uses [`@capacitor-community/speech-recognition`](https://github.com/capacitor-community/speech-recognition), which uses the operating system's speech recognizer. `npm run cap:configure` ([client/scripts/configure-native.mjs](../client/scripts/configure-native.mjs)) adds:
 
 | Platform | What gets added | Why |
 | --- | --- | --- |
-| iOS `Info.plist` | `NSMicrophoneUsageDescription` | Text shown in the microphone permission prompt. **Required**: the app crashes on first use without it, and Apple rejects vague text. |
-| iOS `Info.plist` | `NSSpeechRecognitionUsageDescription` | Text shown in the speech recognition prompt. Also required. |
+| iOS `Info.plist` | `NSMicrophoneUsageDescription` | Text in the microphone permission prompt. Required: without it the app crashes, and Apple rejects vague wording. |
+| iOS `Info.plist` | `NSSpeechRecognitionUsageDescription` | Text in the speech recognition prompt. Also required. |
+| iOS | `PrivacyInfo.xcprivacy` (from `client/native/ios/`) | Apple's privacy manifest. It declares the data the app collects and its UserDefaults use. |
 | Android `AndroidManifest.xml` | `android.permission.RECORD_AUDIO` | Runtime microphone permission |
-| Android `AndroidManifest.xml` | `<queries>` for `android.speech.RecognitionService` | On Android 11 and later, lets the app find the system speech service |
-
-Review the wording of the two iOS strings in the script before you submit. They must describe the app's real use.
+| Android `AndroidManifest.xml` | `<queries>` for `android.speech.RecognitionService` | Lets Android 11+ find the system speech service |
 
 **What the user sees:**
 
 1. They tap the mic, and an in-app explainer appears.
-2. They tap **Continue**, and the OS permission prompt or prompts appear. iOS asks twice: once for the microphone and once for speech recognition.
-3. Once permission is granted, they speak and then confirm the text in the editable preview.
-4. If they deny permission, the app shows how to re-enable it:
+2. They tap **Continue**, and the OS permission prompts appear. iOS asks twice: microphone, then speech recognition.
+3. Words appear in the box as they speak. They tap the arrow to add the task.
+4. If they deny permission, the app explains how to turn it back on:
    - **iOS:** Settings → DoNext → Microphone / Speech Recognition.
    - **Android:** Settings → Apps → DoNext → Permissions → Microphone.
-5. **Type instead** is always available.
+5. Typing always works.
 
-**Testing notes:**
-
-- Test voice on **real devices**. Speech recognition is limited or missing on the iOS Simulator and on many Android emulators.
-- Android devices need a speech recognition service. On most devices it comes from the Google app; recognition may happen on the device or on Google's servers, depending on the device.
+**Testing:** test voice on **real devices**. The iOS Simulator and many Android emulators have limited or no speech recognition. Android devices need a speech service, usually provided by the Google app.
 
 ## 4. Release builds
 
 ### Android: signed App Bundle (.aab)
 
-1. Set the version in `android/app/build.gradle`. Increase `versionCode` (an integer) on every upload, and set `versionName` (for example `1.0.0`).
-2. Check the **target SDK** in `android/variables.gradle` against Google Play's *current* target API level requirement. Capacitor 7 targets API 35. If Play requires a higher level when you submit, raise `targetSdkVersion` and `compileSdkVersion`, or upgrade Capacitor. Test after either change.
-3. 🔑 Create an **upload key**, once:
+1. For each new upload, increase `versionCode` (1, 2, 3, …) in `client/android/app/build.gradle`, and update `versionName` (for example `1.0.1`).
+2. 🔑 Create an **upload key**, once:
    ```bash
-   keytool -genkey -v -keystore dewantech-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkey -v -keystore donext-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
    ```
-   Back it up somewhere safe and **never commit it**. If you lose it, you have to ask Google support to reset it.
-4. In Android Studio, choose **Build → Generate Signed App Bundle → Android App Bundle**, select your keystore, and choose the *release* variant. The output is `app-release.aab`.
-5. Enrol in **Play App Signing** when you create the app in Play Console. Google then holds the final app-signing key.
+   Keep it, and its password, somewhere safe and **never commit it**. If you lose it, you have to ask Google support to reset it.
+3. In Android Studio, choose **Build → Generate Signed App Bundle or APK → Android App Bundle**, select your keystore, and pick the *release* variant. The output is `app-release.aab`.
+4. Turn on **Play App Signing** when you create the app in Play Console.
 
 ### iOS: archive and upload
 
-1. 🔑 In the [Apple Developer portal](https://developer.apple.com/account), register the **App ID** (bundle identifier = `appId`).
-2. In Xcode, open **App target → General**. Set the *Version* (for example 1.0.0) and the *Build* number, which must increase with every upload.
+1. 🔑 In the [Apple Developer portal](https://developer.apple.com/account), register the App ID `com.dewantech.donext`.
+2. In Xcode, go to **App target → General** and set the *Version* (1.0.0) and *Build* number. The build number must increase with every upload.
 3. Under **Signing & Capabilities**, choose your 🔑 team and keep *Automatically manage signing* on.
-4. Choose **Product → Archive**, then in **Organizer**, click **Distribute App → App Store Connect → Upload**.
-5. The build appears in App Store Connect after processing. Test it with **TestFlight** before you submit.
-6. Add a **privacy manifest** (`PrivacyInfo.xcprivacy`) following Capacitor's current *iOS Privacy Manifest* guide. Apple requires one for apps that use certain system APIs, including UserDefaults, which Capacitor uses.
+4. Choose **Product → Archive**, then in **Organizer** choose **Distribute App → App Store Connect → Upload**.
+5. Test the uploaded build with **TestFlight** before you submit it for review.
 
 ---
 
-## 5. Store submission requirements
+## 5. Store submission checklist
 
-Each item is marked with its status in this project:
-
-- ✅ already implemented
-- 📝 you need to provide something
-- 🔑 needs your developer account
+✅ done in the app · 📝 you provide · 🔑 needs your developer account
 
 ### Both stores
 
-- ✅ **In-app account deletion.** Apple requires it for apps that let users create accounts, and Google requires it too. It's under **Account → Delete account**.
-- 📝 **Privacy policy URL.** Publish the completed `/privacy` page, for example `https://donext.dewantech.com/privacy`. Fill in every highlighted placeholder first and have it reviewed.
-- 📝 **Support URL or contact email.**
-- 📝 **Demo account for reviewers.** Create a test account with sample tasks and put the email and password in the review notes (Apple: *App Review Information*; Google: *App access*).
+- ✅ **In-app account deletion** (Account → Delete account). Both stores require it.
+- ✅ **Password reset**, **change password**, and **download my data** (Account page).
+- ✅ **Support page** at `/support`, for the store's *Support URL*.
+- ✅ **Privacy Policy** at `/privacy` and **Terms** at `/terms`.
+- 📝 **Business details.** Fill in `LEGAL` in [client/src/lib/brand.ts](../client/src/lib/brand.ts): support email, address, dates, providers and so on. Have a lawyer review the pages, then set `reviewedByCounsel: true`; the "Template" banner then disappears.
+- 📝 **Email sending (SMTP)** configured on the server, so password reset emails arrive (see [DEPLOYMENT.md](DEPLOYMENT.md)).
+- 📝 **Demo account for reviewers.** Create an account with a few tasks and give the email and password in the review notes (Apple: *App Review Information*; Google: *App access*).
 - 📝 **Screenshots:**
-  - iPhone 6.9" or 6.7" (and iPad, if you keep iPad support).
+  - iPhone 6.9" (and iPad, if you keep iPad support).
   - Android phone, plus 7" and 10" tablet if you list tablet support.
-- 📝 **Store listing:**
-  - Name, subtitle or short description, full description, keywords (Apple), and category (Productivity).
-  - Icon: 1024×1024 for Apple; 512×512 plus a 1024×500 feature graphic for Google.
-- 📝 **Age or content rating questionnaire.**
+- 📝 **Store listing:** name, short and full description, keywords (Apple), and category (Productivity).
+  - Apple's 1024×1024 icon: `client/assets/icon-only.png`.
+  - Google's 512×512 icon: `client/public/icons/icon-512.png`, plus a 1024×500 feature graphic that you design.
+- 📝 **Content rating / age rating questionnaires.**
 
 ### Apple App Store (🔑 App Store Connect)
 
-- **App Privacy ("nutrition label").** Based on this codebase:
-  - The app collects Name, Email Address, and *User Content* (tasks).
-  - That data is linked to the user and used for App Functionality.
-  - It is not used for tracking.
-  - Audio is converted to text by Apple's speech service and is not collected by the app.
-
-  Confirm all of this against your final setup, including any analytics or crash reporting you add later.
-- **Export compliance.** The app only uses standard HTTPS. You will answer the encryption questions in App Store Connect; you can add `ITSAppUsesNonExemptEncryption = NO` to Info.plist once you have confirmed it applies to you.
-- **Minimum functionality (Guideline 4.2).** Apps that are only a "website in a wrapper" can be rejected. This app has offline storage, native speech recognition, and native permissions, which helps. Describe these in your review notes.
-- **Sign in with Apple** isn't required, because the app only offers its own email and password login. It becomes required if you add third-party logins such as Google or Facebook.
-- **Terms.** Either use Apple's standard EULA or make sure your Terms page includes Apple's minimum terms; this is flagged in the Terms template.
+- **App Privacy answers.** These must match the bundled privacy manifest:
+  - Collected: Name, Email Address, and Other User Content (tasks).
+  - All linked to the user, used for App Functionality, and not used for tracking.
+  - Audio is converted to text by Apple's speech service and isn't collected by DoNext.
+- **Export compliance.** The app only uses standard HTTPS. Answer the encryption questions in App Store Connect.
+- **Minimum functionality (Guideline 4.2).** In your review notes, mention the native voice input, offline storage and sync.
+- **Sign in with Apple** isn't required, because the app only has its own email and password login.
+- **Terms.** Use Apple's standard EULA, or make sure your Terms include Apple's minimum terms.
 
 ### Google Play (🔑 Play Console)
 
-- **Data safety form.** Declare the account data (name, email) and user content (tasks) that are collected, that data is encrypted in transit, and that users can request deletion. Answer the microphone and audio questions according to how the system speech service processes audio on your target devices, and check Google's current guidance.
-- **Account deletion web link.** Google also requires a URL where users can request deletion without the app. Use `https://<your-url>/account`, where users log in and delete, or a support email process that you describe on your privacy page.
-- **Testing requirement for new personal accounts.** Newer *personal* developer accounts must run a **closed test** with a minimum number of testers (currently 12) for 14 continuous days before production access. Check the current rule in Play Console.
-- **Target API level.** Check it at submission time (see Android release step 2).
-- **Permissions.** `RECORD_AUDIO` doesn't need a special declaration form, but it must be justified by visible features, which the mic button is, and reflected in the Data safety form.
+- **Data safety form:**
+  - Declare name, email and tasks as collected.
+  - Data is encrypted in transit, and users can delete it.
+  - Answer the audio questions according to how the device's speech service handles audio.
+- **Account deletion link.** Use `https://<your-domain>/account`; users sign in there and delete their account.
+- **Closed testing.** New *personal* developer accounts must first run a closed test with at least 12 testers for 14 continuous days. Check the current rule in Play Console.
+- **Target API.** ✅ API 36.
 
 ### Suggested release path
 
-1. Internal testing on your own devices, using a TestFlight internal group and a Play *Internal testing* track.
-2. External or closed testing with real users.
-3. Fix the issues they report, then submit for review.
-4. If a store rejects the app, read its message, make the requested changes, and resubmit. Review outcomes and timelines are up to Apple and Google.
+1. Test on your own devices: a TestFlight internal group, and Play's *Internal testing* track.
+2. Run a closed or external test with real users.
+3. Fix the reported issues, then submit for review. Approval and timelines are decided by Apple and Google.

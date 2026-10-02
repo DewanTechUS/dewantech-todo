@@ -1,16 +1,27 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { COMPANY_LEGAL_NAME } from '../lib/brand';
+import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, type LegalField } from '../lib/brand';
 
 /**
- * Highlighted placeholder for details only the app owner can provide.
- * Search the codebase for "<Ph>" to find every one before publishing.
+ * Highlighted placeholder. Business details come from LEGAL in lib/brand.ts — fill them in there.
  */
 function Ph({ children }: { children: ReactNode }) {
   return <mark className="placeholder-mark">[{children}]</mark>;
 }
 
+/** A business detail from LEGAL in lib/brand.ts, or a highlighted placeholder while it is empty. */
+function V({ k, label }: { k: LegalField; label: string }) {
+  const value = String(LEGAL[k] ?? '').trim();
+  return value ? <>{value}</> : <Ph>{label}</Ph>;
+}
+
+/** A note for the owner/lawyer that disappears once the legal text is final. */
+function ReviewNote({ children }: { children: ReactNode }) {
+  return LEGAL_IS_DRAFT ? <Ph>{children}</Ph> : null;
+}
+
 function DraftNotice() {
+  if (!LEGAL_IS_DRAFT) return null;
   return (
     <div role="note" className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100">
       <strong>Template — not yet final.</strong> Highlighted <mark className="placeholder-mark">[PLACEHOLDERS]</mark> must be
@@ -25,12 +36,12 @@ export function PrivacyPage() {
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Privacy Policy</h1>
       <p className="text-sm">
-        Effective date: <Ph>EFFECTIVE DATE</Ph> · Last updated: <Ph>LAST UPDATED DATE</Ph>
+        Effective date: <V k="effectiveDate" label="EFFECTIVE DATE" /> · Last updated: <V k="lastUpdated" label="LAST UPDATED DATE" />
       </p>
       <DraftNotice />
 
       <p>
-        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at <Ph>REGISTERED BUSINESS ADDRESS</Ph>,
+        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" />,
         collects, uses and protects information when you use the DoNext web app and mobile apps (the “App”).
       </p>
 
@@ -45,7 +56,7 @@ export function PrivacyPage() {
         </li>
         <li>
           <strong>Technical data:</strong> our servers and hosting provider may log IP addresses, request times and error
-          information for security and reliability. Logs are kept for <Ph>LOG RETENTION PERIOD, e.g. 30 days</Ph>.
+          information for security and reliability. Logs are kept for <V k="logRetention" label="LOG RETENTION PERIOD, e.g. 30 days" />.
         </li>
       </ul>
       <p>We do not use advertising trackers, sell your personal information, or share it for cross-context behavioural advertising.</p>
@@ -69,17 +80,20 @@ export function PrivacyPage() {
       <ul>
         <li>To provide the App: authenticate you, store and sync your tasks across your devices.</li>
         <li>To keep the service secure, prevent abuse and fix problems.</li>
-        <li>To contact you about your account or important changes to this policy.</li>
+        <li>
+          To send account emails you ask for, such as password reset links, and to tell you about important changes to this policy.
+        </li>
       </ul>
       <p>
         Legal bases (where applicable, e.g. GDPR): performance of our contract with you, and our legitimate interests in security.{' '}
-        <Ph>CONFIRM LEGAL BASES WITH COUNSEL</Ph>
+        <ReviewNote>CONFIRM LEGAL BASES WITH COUNSEL</ReviewNote>
       </p>
 
       <h2>Service providers</h2>
       <p>
-        We use the following providers to run the App, who process data on our behalf: hosting — <Ph>HOSTING PROVIDER</Ph>; database —{' '}
-        <Ph>DATABASE PROVIDER, e.g. MongoDB Atlas</Ph>, region <Ph>DATA STORAGE REGION</Ph>. <Ph>LIST ANY OTHER PROVIDERS</Ph>
+        We use the following providers to run the App, who process data on our behalf: hosting — <V k="hostingProvider" label="HOSTING PROVIDER" />; database —{' '}
+        <V k="databaseProvider" label="DATABASE PROVIDER, e.g. MongoDB Atlas" />, region <V k="dataRegion" label="DATA STORAGE REGION" />; email delivery —{' '}
+        <V k="emailProvider" label="EMAIL PROVIDER, e.g. Amazon SES or Postmark" />. Other providers: <V k="otherProviders" label="LIST ANY OTHER PROVIDERS, or none" />.
       </p>
 
       <h2>Retention and deletion</h2>
@@ -88,7 +102,7 @@ export function PrivacyPage() {
         <Link to="/account" className="underline">
           Account → Delete account
         </Link>
-        . Deleted data is removed from our active database immediately and from backups within <Ph>BACKUP RETENTION PERIOD</Ph>.
+        . Deleted data is removed from our active database immediately and from backups within <V k="backupRetention" label="BACKUP RETENTION PERIOD" />.
       </p>
 
       <h2>Security</h2>
@@ -100,13 +114,17 @@ export function PrivacyPage() {
       <h2>Your rights</h2>
       <p>
         Depending on where you live, you may have rights to access, correct, export or delete your data, and to object to or
-        restrict processing. To exercise these rights, contact us at <Ph>PRIVACY CONTACT EMAIL</Ph>. <Ph>ADD REGION-SPECIFIC
-        DISCLOSURES (GDPR/UK GDPR, CCPA/CPRA, etc.) IF APPLICABLE</Ph>
+        restrict processing. You can download a copy of your data or delete your account yourself at any time from{' '}
+        <Link to="/account" className="underline">
+          Account
+        </Link>
+        . To exercise other rights, contact us at <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />. <ReviewNote>ADD REGION-SPECIFIC
+        DISCLOSURES (GDPR/UK GDPR, CCPA/CPRA, etc.) IF APPLICABLE</ReviewNote>
       </p>
 
       <h2>Children</h2>
       <p>
-        The App is not directed to children under <Ph>MINIMUM AGE, e.g. 13 or 16</Ph>, and we do not knowingly collect their personal
+        The App is not directed to children under <V k="minimumAge" label="MINIMUM AGE, e.g. 13 or 16" />, and we do not knowingly collect their personal
         information.
       </p>
 
@@ -115,7 +133,7 @@ export function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>PRIVACY CONTACT EMAIL</Ph>
+        {COMPANY_LEGAL_NAME}, <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" /> · Email: <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />
       </p>
     </article>
   );
@@ -126,7 +144,7 @@ export function TermsPage() {
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Terms of Service</h1>
       <p className="text-sm">
-        Effective date: <Ph>EFFECTIVE DATE</Ph>
+        Effective date: <V k="effectiveDate" label="EFFECTIVE DATE" />
       </p>
       <DraftNotice />
 
@@ -142,7 +160,7 @@ export function TermsPage() {
       <h2>Your account</h2>
       <p>
         You must provide accurate information and keep your password secure. You are responsible for activity under your account.
-        You must be at least <Ph>MINIMUM AGE</Ph> years old to use the App.
+        You must be at least <V k="minimumAge" label="MINIMUM AGE" /> years old to use the App.
       </p>
 
       <h2>Your content</h2>
@@ -160,8 +178,7 @@ export function TermsPage() {
 
       <h2>Pricing</h2>
       <p>
-        <Ph>STATE WHETHER THE APP IS FREE, OR DESCRIBE PAID PLANS AND BILLING TERMS. Note: in-app digital purchases on iOS/Android
-        generally must use Apple/Google billing.</Ph>
+        <V k="pricing" label="STATE WHETHER THE APP IS FREE, OR DESCRIBE PAID PLANS (in-app digital purchases on iOS/Android generally must use Apple/Google billing)" />
       </p>
 
       <h2>Availability and changes</h2>
@@ -180,25 +197,25 @@ export function TermsPage() {
       <p>
         The App is provided “as is” without warranties of any kind, to the extent permitted by law. To the extent permitted by law,
         DewanTech is not liable for indirect or consequential losses, or for lost data.{' '}
-        <Ph>HAVE COUNSEL REVIEW LIABILITY LANGUAGE FOR YOUR JURISDICTION</Ph>
+        <ReviewNote>HAVE COUNSEL REVIEW LIABILITY LANGUAGE FOR YOUR JURISDICTION</ReviewNote>
       </p>
 
       <h2>Governing law</h2>
       <p>
-        These Terms are governed by the laws of <Ph>GOVERNING JURISDICTION</Ph>. Disputes will be resolved in{' '}
-        <Ph>VENUE / DISPUTE RESOLUTION METHOD</Ph>.
+        These Terms are governed by the laws of <V k="governingLaw" label="GOVERNING JURISDICTION" />. Disputes will be resolved in{' '}
+        <V k="disputeVenue" label="VENUE / DISPUTE RESOLUTION METHOD" />.
       </p>
 
       <h2>App store terms</h2>
       <p>
         If you downloaded the App from the Apple App Store or Google Play, you also agree to that store's terms. Apple and Google are
-        not parties to these Terms and are not responsible for the App or its support. <Ph>CONFIRM INCLUSION OF APPLE'S MINIMUM
-        EULA TERMS OR USE APPLE'S STANDARD EULA</Ph>
+        not parties to these Terms and are not responsible for the App or its support. <ReviewNote>CONFIRM INCLUSION OF APPLE'S MINIMUM
+        EULA TERMS OR USE APPLE'S STANDARD EULA</ReviewNote>
       </p>
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>SUPPORT CONTACT EMAIL</Ph>
+        {COMPANY_LEGAL_NAME}, <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" /> · Email: <V k="supportEmail" label="SUPPORT CONTACT EMAIL" />
       </p>
     </article>
   );

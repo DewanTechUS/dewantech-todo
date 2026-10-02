@@ -43,6 +43,8 @@ JWT_SECRET=<64+ random hex chars>
 SERVE_CLIENT=true
 TRUST_PROXY=1                            # behind Nginx / a PaaS load balancer
 CORS_ORIGINS=capacitor://localhost,https://localhost   # only needed for the mobile apps
+APP_URL=https://donext.dewantech.com     # used in password reset emails
+# SMTP settings: see "Password reset emails" below
 ```
 
 Start it with `npm start`, which runs `node server/dist/index.js`.
@@ -184,6 +186,33 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 
 ---
 
+## Password reset emails (SMTP)
+
+DoNext emails a reset link when someone taps **Forgot password?**. To deliver those emails, the server needs an SMTP account. *You sign up for this with your own account.* Any provider works, for example:
+
+- **Amazon SES:** very cheap, requires verifying your domain.
+- **Postmark** or **SendGrid:** quick to set up, with free or low-cost tiers.
+- **Google Workspace / Microsoft 365:** if you already use them for dewantech.com email.
+
+Add these to the server's environment:
+
+```ini
+APP_URL=https://donext.dewantech.com          # where the web app lives (include a sub-path such as /todo if you use one)
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587
+SMTP_SECURE=false                             # true for port 465
+SMTP_USER=your-smtp-username
+SMTP_PASS=your-smtp-password
+MAIL_FROM=DoNext <no-reply@dewantech.com>     # a sender address your provider has verified
+```
+
+To improve delivery, add the SPF and DKIM DNS records your provider gives you for dewantech.com.
+
+- **Without `SMTP_HOST`** (development), reset emails are printed in the server log, so you can copy the link from there.
+- **In production without SMTP**, the server logs a warning at startup, and users won't receive reset emails.
+
+**Test it:** on the login page, tap **Forgot password?**, enter your email, and open the link you receive.
+
 ## After deploying: verify
 
 - [ ] `https://<your-url>/api/health` returns `{"ok":true,"db":"connected"}`. In layout B, check this on the API host.
@@ -201,6 +230,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 - [ ] The MongoDB Atlas network access list is restricted, the database user has the least privilege it needs, and **backups** are enabled.
 - [ ] `NODE_ENV=production` and `TRUST_PROXY` match your proxy setup.
 - [ ] `CORS_ORIGINS` lists only origins you control.
+- [ ] `APP_URL` and the SMTP settings are set, and a test password reset email arrives.
 - [ ] An uptime monitor watches `/api/health`.
 - [ ] Legal page placeholders are completed and reviewed (see the README checklist).
 

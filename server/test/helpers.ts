@@ -5,12 +5,17 @@ import type { Express } from 'express';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { createApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
+import type { Mail } from '../src/lib/mailer.js';
+
+/** Emails the app 'sent' during tests, newest last. */
+export const sentMail: Mail[] = [];
 
 export const testConfig = loadConfig({
   NODE_ENV: 'test',
   MONGODB_URI: 'unused-in-tests',
   JWT_SECRET: 'test-secret-that-is-definitely-long-enough-123',
   CORS_ORIGINS: 'http://localhost:5173',
+  APP_URL: 'https://donext.example.com',
 });
 
 /** Spins up an in-memory MongoDB for the test file and returns a lazily-created app. */
@@ -22,10 +27,11 @@ export function useTestApp(): { app: () => Express } {
     mongo = await MongoMemoryServer.create();
     await mongoose.connect(mongo.getUri());
     await mongoose.connection.syncIndexes();
-    app = createApp(testConfig, { authRateLimit: 1000 });
+    app = createApp(testConfig, { authRateLimit: 1000, mailer: { send: async (m) => void sentMail.push(m) } });
   });
 
   afterEach(async () => {
+    sentMail.length = 0;
     const { collections } = mongoose.connection;
     await Promise.all(Object.values(collections).map((c) => c.deleteMany({})));
   });

@@ -20,10 +20,15 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
     "sharp": "^0.34.5"
+  },
+  "overrides": {
+    "@capacitor-community/speech-recognition": {
+      "@capacitor/core": "^8.5.2"
+    }
   }
 }

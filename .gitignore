@@ -7,7 +7,5 @@ coverage/
 !.env.*.example
 *.log
 .DS_Store
-client/android/
-client/ios/
 client/dev-dist/
 server/.data/

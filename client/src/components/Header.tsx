@@ -14,6 +14,7 @@ import {
   ExternalIcon,
   FileTextIcon,
   GlobeIcon,
+  HelpIcon,
   ListIcon,
   LogoutIcon,
   MenuIcon,
@@ -216,7 +217,8 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
             </div>
           </section>
 
-          <MenuSection title="Legal & about">
+          <MenuSection title="Help & legal">
+            <MenuLink to="/support" label="Help & Support" Icon={HelpIcon} />
             <MenuLink to="/privacy" label="Privacy Policy" Icon={ShieldIcon} />
             <MenuLink to="/terms" label="Terms of Service" Icon={FileTextIcon} />
             <li>

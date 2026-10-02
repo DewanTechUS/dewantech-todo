@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DoNext</string>
+    <string name="title_activity_main">DoNext</string>
+    <string name="package_name">com.dewantech.donext</string>
+    <string name="custom_url_scheme">com.dewantech.donext</string>
+</resources>
