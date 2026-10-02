@@ -1,5 +1,7 @@
 # Deploying DoNext to your website
 
+> **Using Hostinger?** Follow [HOSTINGER.md](HOSTINGER.md) instead. It has the exact hPanel settings.
+
 The app has two parts:
 
 - **The web app:** static files built into `client/dist`.

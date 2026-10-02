@@ -10,6 +10,7 @@ DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 | Guide | What it covers |
 | --- | --- |
 | This README | Features, MongoDB setup, local development, tests, configuration, architecture |
+| [docs/HOSTINGER.md](docs/HOSTINGER.md) | **Step-by-step deployment on Hostinger** (Node.js Web App, settings and environment variables) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Putting the app on your DewanTech website (subdomain or `/todo/` sub-path), Docker, production checklist |
 | [docs/MOBILE.md](docs/MOBILE.md) | iOS/Android builds, microphone permissions, signing, App Store and Google Play submission requirements |
 
