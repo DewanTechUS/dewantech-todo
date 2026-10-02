@@ -1,8 +1,8 @@
 {
-  "name": "dewantech-todo",
+  "name": "donext",
   "version": "1.0.0",
   "private": true,
-  "description": "DewanTech To-Do — full-stack, offline-first, installable task manager",
+  "description": "DoNext — full-stack, offline-first, installable task manager",
   "workspaces": [
     "server",
     "client"
@@ -22,6 +22,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "sharp": "^0.34.5"
   }
 }

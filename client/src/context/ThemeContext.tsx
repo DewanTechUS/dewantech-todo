@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', resolved === 'dark');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0f172a' : '#4f46e5');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0f172a' : '#012360');
   }, [resolved]);
 
   const setPref = (p: ThemePref) => {

@@ -5,17 +5,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Built around the DewanTech blue (#006fef) and the DoNext navy (#012360).
         brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          50: '#eef6ff',
+          100: '#d9eaff',
+          200: '#bcdaff',
+          300: '#8ec2ff',
+          400: '#4f9dff',
+          500: '#1a80ff',
+          600: '#006fef',
+          700: '#0059c4',
+          800: '#00479d',
+          900: '#012360',
+        },
+        // Accent from the DoNext check mark
+        success: {
+          500: '#01bc7a',
+          600: '#019a64',
         },
       },
       keyframes: {

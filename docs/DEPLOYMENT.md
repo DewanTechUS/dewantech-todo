@@ -1,4 +1,4 @@
-# Deploying DewanTech To-Do to your website
+# Deploying DoNext to your website
 
 The app has two parts:
 
@@ -11,7 +11,7 @@ Choose **one** of these layouts:
 
 | Layout | Example URL | Best for |
 | --- | --- | --- |
-| **A. Subdomain, single server** (recommended) | `https://todo.dewantech.com` | Simplest setup: one Node process serves the API and the app, everything is same-origin, and you don't need to configure CORS |
+| **A. Subdomain, single server** (recommended) | `https://donext.dewantech.com` | Simplest setup: one Node process serves the API and the app, everything is same-origin, and you don't need to configure CORS |
 | **B. Sub-path on your existing site + separate API** | `https://dewantech.com/todo/` with the API at `https://api.dewantech.com` | Your main site is on static or shared hosting and you want the app under its domain |
 
 HTTPS is **required**. Service workers (offline support and installability), the microphone, and secure sign-in all depend on it.
@@ -22,7 +22,7 @@ HTTPS is **required**. Service workers (offline support and installability), the
 
 ### 1. DNS
 
-Create an `A` record (or a `CNAME`, if your platform gives you one) for `todo.dewantech.com` that points at your host. *You do this in your domain registrar's or DNS provider's dashboard, using your own account.*
+Create an `A` record (or a `CNAME`, if your platform gives you one) for `donext.dewantech.com` that points at your host. *You do this in your domain registrar's or DNS provider's dashboard, using your own account.*
 
 ### 2. Build and configure
 
@@ -53,21 +53,21 @@ Start it with `npm start`, which runs `node server/dist/index.js`.
 - **Start command:** `npm start`
 - **Environment variables:** set the values above in the dashboard, not in a committed file.
 - **Health check path:** `/api/health`
-- **Custom domain:** add `todo.dewantech.com` in the platform's dashboard; the platform issues the TLS certificate.
+- **Custom domain:** add `donext.dewantech.com` in the platform's dashboard; the platform issues the TLS certificate.
 
 ### 3b. On your own VPS (Ubuntu + Nginx)
 
-Keep the process running with systemd. Create `/etc/systemd/system/dewantech-todo.service`:
+Keep the process running with systemd. Create `/etc/systemd/system/donext.service`:
 
 ```ini
 [Unit]
-Description=DewanTech To-Do
+Description=DoNext
 After=network.target
 
 [Service]
-WorkingDirectory=/srv/dewantech-todo
+WorkingDirectory=/srv/donext
 ExecStart=/usr/bin/node server/dist/index.js
-EnvironmentFile=/srv/dewantech-todo/server/.env
+EnvironmentFile=/srv/donext/server/.env
 Restart=always
 User=www-data
 
@@ -76,14 +76,14 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl enable --now dewantech-todo
+sudo systemctl enable --now donext
 ```
 
-Nginx reverse proxy, in `/etc/nginx/sites-available/todo.dewantech.com`:
+Nginx reverse proxy, in `/etc/nginx/sites-available/donext.dewantech.com`:
 
 ```nginx
 server {
-    server_name todo.dewantech.com;
+    server_name donext.dewantech.com;
     location / {
         proxy_pass http://127.0.0.1:4000;
         proxy_set_header Host $host;
@@ -96,21 +96,21 @@ server {
 Then get a free TLS certificate:
 
 ```bash
-sudo certbot --nginx -d todo.dewantech.com
+sudo certbot --nginx -d donext.dewantech.com
 ```
 
 ### 3c. With Docker
 
 ```bash
-docker build -t dewantech-todo .
-docker run -d --restart unless-stopped -p 4000:4000 --env-file server/.env dewantech-todo
+docker build -t donext .
+docker run -d --restart unless-stopped -p 4000:4000 --env-file server/.env donext
 ```
 
 The image sets `SERVE_CLIENT=true` and includes a health check. Put Nginx or your platform's TLS termination in front of it, as in 3b.
 
 ### 4. Link it from your DewanTech website
 
-Add a menu item or button on dewantech.com that links to `https://todo.dewantech.com`.
+Add a menu item or button on dewantech.com that links to `https://donext.dewantech.com`.
 
 ---
 

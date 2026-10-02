@@ -30,12 +30,13 @@ describe('Header mobile menu', () => {
 
     const menu = screen.getByRole('dialog', { name: 'Menu' });
     expect(within(menu).getByRole('link', { name: 'Log in' })).toBeInTheDocument();
-    expect(within(menu).getByRole('link', { name: 'Sign up' })).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Create free account' })).toBeInTheDocument();
     expect(within(menu).getByRole('group', { name: 'Color theme' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Terms of Service' })).toBeInTheDocument();
-    expect(within(menu).getByRole('link', { name: 'DewanTech website' })).toBeInTheDocument();
-    expect(within(menu).getByText(/© \d{4} DewanTech/)).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: /DewanTech.com/ })).toBeInTheDocument();
+    expect(within(menu).getByText(/© \d{4} Dewan Global LLC dba DewanTech™/)).toBeInTheDocument();
+    expect(within(menu).getByText('Technology Built with Purpose.')).toBeInTheDocument();
     expect(menu).toContainElement(document.activeElement as HTMLElement);
   });
 

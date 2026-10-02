@@ -1,6 +1,6 @@
 # Single-container deploy: Express serves the API and the built React PWA.
-# Build:  docker build -t dewantech-todo .
-# Run:    docker run -p 4000:4000 --env-file server/.env -e SERVE_CLIENT=true dewantech-todo
+# Build:  docker build -t donext .
+# Run:    docker run -p 4000:4000 --env-file server/.env -e SERVE_CLIENT=true donext
 
 FROM node:22-alpine AS build
 WORKDIR /app

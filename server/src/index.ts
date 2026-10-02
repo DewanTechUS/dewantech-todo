@@ -11,7 +11,7 @@ async function main() {
 
   const app = createApp(config);
   const server = app.listen(config.PORT, () => {
-    console.log(`DewanTech To-Do API listening on http://localhost:${config.PORT}`);
+    console.log(`DoNext API listening on http://localhost:${config.PORT}`);
   });
 
   const shutdown = async (signal: string) => {

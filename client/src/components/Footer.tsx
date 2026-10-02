@@ -1,28 +1,26 @@
 import { Link } from 'react-router-dom';
-import { LogoMark } from './Icons';
+import { COMPANY_SITE_URL } from '../lib/brand';
+import { CompanyCredit } from './Brand';
 
-/** PLACEHOLDER: replace with your real DewanTech website URL. */
-export const DEWANTECH_SITE_URL = 'https://dewantech.com';
+const linkClass =
+  'flex min-h-touch items-center rounded-xl px-3 text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white';
 
 export function Footer() {
   return (
-    // On phones the footer's links live in the header's menu instead.
-    <footer className="safe-bottom mt-auto hidden border-t lg:block border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-6 text-sm text-slate-500 dark:text-slate-400 sm:flex-row sm:justify-between">
-        <a href={DEWANTECH_SITE_URL} className="flex min-h-touch items-center gap-2 rounded-xl" rel="noopener">
-          <LogoMark width={24} height={24} />
-          <span>
-            © {new Date().getFullYear()} <strong className="font-semibold text-slate-700 dark:text-slate-200">DewanTech</strong>. All
-            rights reserved.
-          </span>
-        </a>
-        <nav aria-label="Legal" className="flex gap-2">
-          <Link to="/privacy" className="flex min-h-touch items-center rounded-xl px-3 hover:text-slate-900 dark:hover:text-white">
+    // On phones and tablets the footer lives in the header's menu instead.
+    <footer className="safe-bottom mt-auto hidden border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:block">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-4 py-6">
+        <CompanyCredit />
+        <nav aria-label="Legal" className="flex shrink-0 gap-1">
+          <Link to="/privacy" className={linkClass}>
             Privacy Policy
           </Link>
-          <Link to="/terms" className="flex min-h-touch items-center rounded-xl px-3 hover:text-slate-900 dark:hover:text-white">
+          <Link to="/terms" className={linkClass}>
             Terms of Service
           </Link>
+          <a href={COMPANY_SITE_URL} rel="noopener" className={linkClass}>
+            DewanTech.com
+          </a>
         </nav>
       </div>
     </footer>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { COMPANY_LEGAL_NAME } from '../lib/brand';
 
 /**
  * Highlighted placeholder for details only the app owner can provide.
@@ -29,8 +30,8 @@ export function PrivacyPage() {
       <DraftNotice />
 
       <p>
-        This policy explains how <Ph>LEGAL COMPANY NAME</Ph> (“DewanTech”, “we”, “us”), located at <Ph>REGISTERED BUSINESS ADDRESS</Ph>,
-        collects, uses and protects information when you use the DewanTech To-Do web app and mobile apps (the “App”).
+        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at <Ph>REGISTERED BUSINESS ADDRESS</Ph>,
+        collects, uses and protects information when you use the DoNext web app and mobile apps (the “App”).
       </p>
 
       <h2>Information we collect</h2>
@@ -114,7 +115,7 @@ export function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>
-        <Ph>LEGAL COMPANY NAME</Ph>, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>PRIVACY CONTACT EMAIL</Ph>
+        {COMPANY_LEGAL_NAME}, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>PRIVACY CONTACT EMAIL</Ph>
       </p>
     </article>
   );
@@ -130,7 +131,7 @@ export function TermsPage() {
       <DraftNotice />
 
       <p>
-        These Terms govern your use of DewanTech To-Do (the “App”), provided by <Ph>LEGAL COMPANY NAME</Ph> (“DewanTech”). By creating
+        These Terms govern your use of DoNext (the “App”), provided by {COMPANY_LEGAL_NAME} (“DewanTech”). By creating
         an account or using the App you agree to these Terms and our{' '}
         <Link to="/privacy" className="underline">
           Privacy Policy
@@ -197,7 +198,7 @@ export function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        <Ph>LEGAL COMPANY NAME</Ph>, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>SUPPORT CONTACT EMAIL</Ph>
+        {COMPANY_LEGAL_NAME}, <Ph>REGISTERED BUSINESS ADDRESS</Ph> · Email: <Ph>SUPPORT CONTACT EMAIL</Ph>
       </p>
     </article>
   );

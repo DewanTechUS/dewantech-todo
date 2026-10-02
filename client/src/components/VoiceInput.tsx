@@ -186,7 +186,7 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
             Your {support === 'native' ? 'device' : 'browser'} will ask for permission to use the microphone
             {support === 'native' ? ' and speech recognition' : ''}. Speech is turned into text by your{' '}
             {support === 'native' ? "device's" : "browser's"} speech service
-            {support === 'web' ? ' (some browsers, such as Chrome, send audio to their provider)' : ''}. DewanTech To-Do
+            {support === 'web' ? ' (some browsers, such as Chrome, send audio to their provider)' : ''}. DoNext
             never records or stores audio — only the text you send.
           </p>
           <div className="flex flex-wrap justify-center gap-2">

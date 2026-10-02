@@ -13,9 +13,9 @@ const root = process.argv[2] ?? process.cwd();
 
 const IOS_KEYS = {
   NSMicrophoneUsageDescription:
-    'DewanTech To-Do uses the microphone only when you tap the microphone button, so you can add tasks by speaking.',
+    'DoNext uses the microphone only when you tap the microphone button, so you can add tasks by speaking.',
   NSSpeechRecognitionUsageDescription:
-    'DewanTech To-Do converts your speech into task text when you use voice input. Audio is not stored by DewanTech.',
+    'DoNext converts your speech into task text when you use voice input. DoNext does not store audio.',
 };
 
 const escapeXml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

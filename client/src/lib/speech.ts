@@ -185,7 +185,7 @@ export function speechErrorMessage(code: SpeechErrorCode, support: SpeechSupport
   switch (code) {
     case 'permission-denied':
       return support === 'native'
-        ? 'Microphone or speech recognition access is turned off. Enable it in your device Settings for DewanTech To-Do, then try again — or type your task instead.'
+        ? 'Microphone or speech recognition access is turned off. Enable it in your device Settings for DoNext, then try again — or type your task instead.'
         : 'Microphone access was blocked. Allow the microphone for this site in your browser settings (usually the lock icon in the address bar), then try again — or type your task instead.';
     case 'no-speech':
       return "We didn't hear anything. Tap the microphone and speak clearly, or type your task instead.";

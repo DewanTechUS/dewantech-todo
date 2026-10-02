@@ -29,7 +29,9 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
       >
         <span
           className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-colors ${
-            task.completed ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-400 dark:border-slate-500'
+            task.completed
+              ? 'border-success-500 bg-success-500 text-white'
+              : 'border-slate-300 bg-white hover:border-success-500 dark:border-slate-500 dark:bg-transparent'
           }`}
         >
           {task.completed && <CheckIcon width={16} height={16} strokeWidth={3} />}

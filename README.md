@@ -1,6 +1,6 @@
-# DewanTech To-Do
+# DoNext
 
-A mobile-friendly, offline-first to-do app for the DewanTech brand.
+DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 
 - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite, installable PWA
 - **Backend:** Node.js, Express 5, TypeScript, Zod validation
@@ -52,7 +52,8 @@ dt_to_do/
 ├─ package.json            npm workspaces + root scripts
 ├─ .env.example            sample server environment
 ├─ Dockerfile              single-container production image
-├─ scripts/generate-icons.mjs   regenerates PWA icons + Capacitor icon/splash sources
+├─ branding/              source logos: donext-logo.png (app), dewantech-logo.png (company)
+├─ scripts/generate-icons.mjs   builds all icons, splash screens and in-app logos from branding/
 ├─ server/
 │  ├─ src/
 │  │  ├─ index.ts          entry: env → MongoDB → HTTP server
@@ -148,7 +149,7 @@ Other useful commands:
 | `npm run typecheck` | Type-check both workspaces |
 | `npm run build` | Production build (`client/dist` and `server/dist`) |
 | `npm start` | Run the built server (`server/dist/index.js`) |
-| `npm run icons` | Regenerate icons and splash sources from the built-in logo (replace with your artwork any time) |
+| `npm run icons` | Rebuild every icon, splash screen and in-app logo from the files in `branding/` |
 
 **Testing on your phone over Wi-Fi:** run `npm run dev -w client -- --host` and open `http://<your-PC-IP>:5173` on the phone. Browsers only allow the microphone on HTTPS or `localhost`, so voice input won't work over plain LAN HTTP. Use a tunnel such as `ngrok http 5173`, or a deployed HTTPS build, to test voice on a phone.
 
@@ -246,8 +247,8 @@ The full design is commented in [client/src/lib/taskStore.ts](client/src/lib/tas
 
 Search the code for `<Ph>` and `PLACEHOLDER`.
 
-- [ ] [client/src/pages/LegalPages.tsx](client/src/pages/LegalPages.tsx): fill in company name, address, contact emails, dates, hosting and database providers, data region, retention periods, minimum age, governing law, and pricing. Then **have a lawyer review the text.**
-- [ ] [client/src/components/Footer.tsx](client/src/components/Footer.tsx): `DEWANTECH_SITE_URL`.
+- [ ] [client/src/pages/LegalPages.tsx](client/src/pages/LegalPages.tsx): the company name is filled in (Dewan Global LLC dba DewanTech™); fill in the address, contact emails, dates, hosting and database providers, data region, retention periods, minimum age, governing law, and pricing. Then **have a lawyer review the text.**
+- [ ] [client/src/lib/brand.ts](client/src/lib/brand.ts): confirm `COMPANY_SITE_URL`. App name, legal name, slogan and copyright are also set here.
 - [ ] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` (permanent after the first store release) and `appName`.
-- [ ] Icons and splash screens: replace the files in `client/public/icons/` and `client/assets/` with your brand artwork if you like (same sizes).
+- [x] Icons and splash screens are generated from your logos in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
 - [ ] `server/.env`: a real `JWT_SECRET`, production `MONGODB_URI`, and `CORS_ORIGINS`.

@@ -25,10 +25,10 @@ All of these commands run from the `client/` folder.
 cd client
 
 # a) Point the mobile build at your live API
-cp .env.mobile.example .env.mobile    # then edit VITE_API_URL=https://todo.dewantech.com
+cp .env.mobile.example .env.mobile    # then edit VITE_API_URL=https://donext.dewantech.com
 
 # b) Choose your permanent app id (reverse domain you control) in capacitor.config.ts
-#    appId: 'com.dewantech.todo'  ← cannot change after the first store release
+#    appId: 'com.dewantech.donext'  ← cannot change after the first store release
 
 # c) Build the web app and create the native projects
 npm run build:mobile
@@ -45,7 +45,7 @@ npm run cap:assets
 On the server, add the native origins to `CORS_ORIGINS`:
 
 ```ini
-CORS_ORIGINS=https://todo.dewantech.com,capacitor://localhost,https://localhost
+CORS_ORIGINS=https://donext.dewantech.com,capacitor://localhost,https://localhost
 ```
 
 - `capacitor://localhost` is the iOS app's origin.
@@ -89,8 +89,8 @@ Review the wording of the two iOS strings in the script before you submit. They 
 2. They tap **Continue**, and the OS permission prompt or prompts appear. iOS asks twice: once for the microphone and once for speech recognition.
 3. Once permission is granted, they speak and then confirm the text in the editable preview.
 4. If they deny permission, the app shows how to re-enable it:
-   - **iOS:** Settings → DewanTech To-Do → Microphone / Speech Recognition.
-   - **Android:** Settings → Apps → DewanTech To-Do → Permissions → Microphone.
+   - **iOS:** Settings → DoNext → Microphone / Speech Recognition.
+   - **Android:** Settings → Apps → DoNext → Permissions → Microphone.
 5. **Type instead** is always available.
 
 **Testing notes:**
@@ -134,7 +134,7 @@ Each item is marked with its status in this project:
 ### Both stores
 
 - ✅ **In-app account deletion.** Apple requires it for apps that let users create accounts, and Google requires it too. It's under **Account → Delete account**.
-- 📝 **Privacy policy URL.** Publish the completed `/privacy` page, for example `https://todo.dewantech.com/privacy`. Fill in every highlighted placeholder first and have it reviewed.
+- 📝 **Privacy policy URL.** Publish the completed `/privacy` page, for example `https://donext.dewantech.com/privacy`. Fill in every highlighted placeholder first and have it reviewed.
 - 📝 **Support URL or contact email.**
 - 📝 **Demo account for reviewers.** Create a test account with sample tasks and put the email and password in the review notes (Apple: *App Review Information*; Google: *App access*).
 - 📝 **Screenshots:**

@@ -15,13 +15,13 @@ export default defineConfig(({ mode }) => {
         // Registered manually in main.tsx so it can be skipped inside Capacitor native shells.
         injectRegister: null,
         registerType: 'autoUpdate',
-        includeAssets: ['icons/favicon.svg', 'icons/apple-touch-icon.png'],
+        includeAssets: ['icons/favicon-48.png', 'icons/apple-touch-icon.png'],
         manifest: {
-          name: 'DewanTech To-Do',
-          short_name: 'DT To-Do',
+          name: 'DoNext',
+          short_name: 'DoNext',
           description: 'Plan, capture and finish your tasks — online or offline.',
-          theme_color: '#4f46e5',
-          background_color: '#0f172a',
+          theme_color: '#012360',
+          background_color: '#012360',
           display: 'standalone',
           orientation: 'any',
           start_url: base,
