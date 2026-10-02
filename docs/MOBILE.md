@@ -1,6 +1,6 @@
 # iOS and Android apps (Capacitor)
 
-DoNext is packaged as native iOS and Android apps with **Capacitor 8**. The native shell loads the built web files from inside the app and calls your deployed API over HTTPS.
+DoNext is packaged as native iOS and Android apps with **Capacitor 8**. The app's files are built into the app itself, and all data is stored on the phone, so there's no server to set up.
 
 > **Nothing has been submitted to Apple or Google.** This guide explains how *you* build, sign, and submit the apps. Every step that needs a developer account, a signing key, or a store dashboard is marked 🔑. Store approval is decided by Apple and Google and is not guaranteed.
 
@@ -30,27 +30,9 @@ These projects were generated on Windows. Neither has been compiled yet, because
 | Device for testing | Android 7.0 or later | iOS 15 or later |
 | 🔑 Account to publish | Google Play Console: one-time US$25 fee | Apple Developer Program: US$99 per year |
 
-You also need:
-- Node.js 22 or later.
-- Your API deployed on HTTPS (see [DEPLOYMENT.md](DEPLOYMENT.md)). Native apps can't reach `localhost` on your PC.
+You also need Node.js 22 or later. You don't need a server: the app works fully offline and keeps data on the phone.
 
-## 2. Point the app at your live API (once)
-
-```bash
-cd client
-cp .env.mobile.example .env.mobile      # then set VITE_API_URL=https://donext.dewantech.com
-```
-
-On the server, add the native app origins to `CORS_ORIGINS`:
-
-```ini
-CORS_ORIGINS=https://donext.dewantech.com,capacitor://localhost,https://localhost
-```
-
-- `capacitor://localhost` is the iOS app's origin.
-- `https://localhost` is the Android app's origin.
-
-## 3. Build and run
+## 2. Build and run
 
 From `client/`:
 
@@ -95,7 +77,7 @@ The voice button uses [`@capacitor-community/speech-recognition`](https://github
 
 **Testing:** test voice on **real devices**. The iOS Simulator and many Android emulators have limited or no speech recognition. Android devices need a speech service, usually provided by the Google app.
 
-## 4. Release builds
+## 3. Release builds
 
 ### Android: signed App Bundle (.aab)
 
@@ -118,19 +100,17 @@ The voice button uses [`@capacitor-community/speech-recognition`](https://github
 
 ---
 
-## 5. Store submission checklist
+## 4. Store submission checklist
 
 ✅ done in the app · 📝 you provide · 🔑 needs your developer account
 
 ### Both stores
 
-- ✅ **In-app account deletion** (Account → Delete account). Both stores require it.
-- ✅ **Password reset**, **change password**, and **download my data** (Account page).
-- ✅ **Support page** at `/support`, for the store's *Support URL*.
+- ✅ **No login.** Reviewers just open the app and type a name, so you don't need a demo account. Say this in the review notes.
+- ✅ **Delete data in the app:** remove a person on **People**, or **Erase everything** on **Backup & data**. There are no accounts to delete.
+- ✅ **Support page** at `/support`, for the store's *Support URL* (requires the website version to be online; see [DEPLOYMENT.md](DEPLOYMENT.md)).
 - ✅ **Privacy Policy** at `/privacy` and **Terms** at `/terms`.
-- 📝 **Business details.** Fill in `LEGAL` in [client/src/lib/brand.ts](../client/src/lib/brand.ts): support email, address, dates, providers and so on. Read both pages to check they're accurate, then set `finalized: true`; the "Draft" banner then disappears. The stores require an accurate privacy policy, not a lawyer's review.
-- 📝 **Email sending (SMTP)** configured on the server, so password reset emails arrive (see [DEPLOYMENT.md](DEPLOYMENT.md)).
-- 📝 **Demo account for reviewers.** Create an account with a few tasks and give the email and password in the review notes (Apple: *App Review Information*; Google: *App access*).
+- 📝 **Business details.** Fill in `LEGAL` in [client/src/lib/brand.ts](../client/src/lib/brand.ts): address, dates, the state your LLC is registered in. Read both pages to check they're accurate, then set `finalized: true`; the "Draft" banner then disappears.
 - 📝 **Screenshots:**
   - iPhone 6.9" (and iPad, if you keep iPad support).
   - Android phone, plus 7" and 10" tablet if you list tablet support.
@@ -141,22 +121,16 @@ The voice button uses [`@capacitor-community/speech-recognition`](https://github
 
 ### Apple App Store (🔑 App Store Connect)
 
-- **App Privacy answers.** These must match the bundled privacy manifest:
-  - Collected: Name, Email Address, and Other User Content (tasks).
-  - All linked to the user, used for App Functionality, and not used for tracking.
-  - Audio is converted to text by Apple's speech service and isn't collected by DoNext.
-- **Export compliance.** The app only uses standard HTTPS. Answer the encryption questions in App Store Connect.
-- **Minimum functionality (Guideline 4.2).** In your review notes, mention the native voice input, offline storage and sync.
-- **Sign in with Apple** isn't required, because the app only has its own email and password login.
-- **Terms.** Use Apple's standard EULA, or make sure your Terms include Apple's minimum terms.
+- **App Privacy answers:** **"Data Not Collected."** Everything stays on the device and nothing is sent to you; this matches the bundled privacy manifest. Audio is converted to text by Apple's speech service, not collected by DoNext.
+- **Export compliance.** The app doesn't use encryption beyond what iOS provides. Answer the encryption questions in App Store Connect.
+- **Minimum functionality (Guideline 4.2).** In your review notes, mention the native voice input, offline storage, profiles and sharing.
+- **Sign in with Apple** isn't required, because there's no login.
+- **Terms.** Choose Apple's standard EULA in App Store Connect.
 
 ### Google Play (🔑 Play Console)
 
-- **Data safety form:**
-  - Declare name, email and tasks as collected.
-  - Data is encrypted in transit, and users can delete it.
-  - Answer the audio questions according to how the device's speech service handles audio.
-- **Account deletion link.** Use `https://<your-domain>/account`; users sign in there and delete their account.
+- **Data safety form:** the app **doesn't collect or share** user data, because everything stays on the device. Answer the audio questions according to how the device's speech service handles audio.
+- **Account deletion:** not applicable, because the app has no accounts.
 - **Closed testing.** New *personal* developer accounts must first run a closed test with at least 12 testers for 14 continuous days. Check the current rule in Play Console.
 - **Target API.** ✅ API 36.
 

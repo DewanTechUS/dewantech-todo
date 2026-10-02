@@ -22,13 +22,6 @@ export const LEGAL = {
   supportEmail: 'support@dewantech.com',
   infoEmail: 'info@dewantech.com', // general information and licensing
   privacyEmail: 'support@dewantech.com', // use a dedicated privacy@ address here if you create one
-  hostingProvider: '', // where the API runs, e.g. 'Render' or 'DigitalOcean'
-  databaseProvider: 'MongoDB Atlas',
-  dataRegion: '', // shown in Atlas → your cluster, e.g. 'United States (AWS us-east-1)'
-  emailProvider: '', // service that sends password reset emails (your SMTP provider), e.g. 'Amazon SES'
-  otherProviders: 'none', // other services that process user data, or 'none'
-  logRetention: '30 days', // suggested
-  backupRetention: '30 days', // suggested
   minimumAge: '13', // suggested (U.S. COPPA). Use '16' if you target the EU.
   governingLaw: '', // the state your LLC is registered in, e.g. 'the State of New York, USA'
   disputeVenue: '', // e.g. 'the state and federal courts located in New York County, New York'

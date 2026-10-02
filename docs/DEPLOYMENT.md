@@ -1,243 +1,87 @@
-# Deploying DoNext to your website
+# Putting DoNext on your website
 
-> **Using Hostinger?** Follow [HOSTINGER.md](HOSTINGER.md) instead. It has the exact hPanel settings.
+DoNext is a **static web app**: after `npm run build`, the `client/dist/` folder contains plain files (HTML, JavaScript, CSS, icons). There's no server or database to run. Any web host can serve it, including every Hostinger plan and free hosts like Netlify, Cloudflare Pages or GitHub Pages.
 
-The app has two parts:
+HTTPS is required. Installing the app, offline mode and the microphone only work over HTTPS (or on `localhost`).
 
-- **The web app:** static files built into `client/dist`.
-- **The API:** a Node.js server.
+> Using Hostinger? Follow [HOSTINGER.md](HOSTINGER.md) for click-by-click steps.
 
-The API needs a host that runs Node.js 20 or later, such as a VPS, Render, Railway, Fly.io, DigitalOcean App Platform, or cPanel's *Setup Node.js App*. A static-only host can't run it.
+---
 
-Choose **one** of these layouts:
+## 1. Choose the address
 
-| Layout | Example URL | Best for |
+| Option | Example | Build setting |
 | --- | --- | --- |
-| **A. Subdomain, single server** (recommended) | `https://donext.dewantech.com` | Simplest setup: one Node process serves the API and the app, everything is same-origin, and you don't need to configure CORS |
-| **B. Sub-path on your existing site + separate API** | `https://dewantech.com/todo/` with the API at `https://api.dewantech.com` | Your main site is on static or shared hosting and you want the app under its domain |
+| **Subdomain** (recommended) | `https://donext.dewantech.com` | default (`VITE_BASE_PATH=/`) |
+| **Folder on your main site** | `https://dewantech.com/donext/` | `VITE_BASE_PATH=/donext/` |
 
-HTTPS is **required**. Service workers (offline support and installability), the microphone, and secure sign-in all depend on it.
-
----
-
-## A. Subdomain, single server
-
-### 1. DNS
-
-Create an `A` record (or a `CNAME`, if your platform gives you one) for `donext.dewantech.com` that points at your host. *You do this in your domain registrar's or DNS provider's dashboard, using your own account.*
-
-### 2. Build and configure
-
-On the server, or in your platform's build step:
-
-```bash
-npm ci
-npm run build          # builds client/dist and server/dist
-```
-
-Create `server/.env` from `.env.example`:
+For the folder option, create `client/.env` containing:
 
 ```ini
-NODE_ENV=production
-PORT=4000
-MONGODB_URI=mongodb+srv://...            # see README → MongoDB setup
-JWT_SECRET=<64+ random hex chars>
-SERVE_CLIENT=true
-TRUST_PROXY=1                            # behind Nginx / a PaaS load balancer
-CORS_ORIGINS=capacitor://localhost,https://localhost   # only needed for the mobile apps
-APP_URL=https://donext.dewantech.com     # used in password reset emails
-# SMTP settings: see "Password reset emails" below
+VITE_BASE_PATH=/donext/
 ```
 
-Start it with `npm start`, which runs `node server/dist/index.js`.
-
-### 3a. On a PaaS (Render, Railway, DigitalOcean App Platform, …)
-
-- **Build command:** `npm ci && npm run build`
-- **Start command:** `npm start`
-- **Environment variables:** set the values above in the dashboard, not in a committed file.
-- **Health check path:** `/api/health`
-- **Custom domain:** add `donext.dewantech.com` in the platform's dashboard; the platform issues the TLS certificate.
-
-### 3b. On your own VPS (Ubuntu + Nginx)
-
-Keep the process running with systemd. Create `/etc/systemd/system/donext.service`:
-
-```ini
-[Unit]
-Description=DoNext
-After=network.target
-
-[Service]
-WorkingDirectory=/srv/donext
-ExecStart=/usr/bin/node server/dist/index.js
-EnvironmentFile=/srv/donext/server/.env
-Restart=always
-User=www-data
-
-[Install]
-WantedBy=multi-user.target
-```
+## 2. Build
 
 ```bash
-sudo systemctl enable --now donext
+npm install
+npm run build
 ```
 
-Nginx reverse proxy, in `/etc/nginx/sites-available/donext.dewantech.com`:
+Upload the **contents** of `client/dist/`: `index.html`, `assets/`, `icons/`, `sw.js`, `manifest.webmanifest` and the other files.
 
-```nginx
-server {
-    server_name donext.dewantech.com;
-    location / {
-        proxy_pass http://127.0.0.1:4000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+## 3. Upload, then add the page-refresh rule
 
-Then get a free TLS certificate:
+DoNext has pages such as `/people` and `/data`. The host must send any unknown address back to `index.html`, so refreshing those pages works.
 
-```bash
-sudo certbot --nginx -d donext.dewantech.com
-```
+**Apache / Hostinger / cPanel:** upload this `.htaccess` next to `index.html`.
 
-### 3c. With Docker
-
-```bash
-docker build -t donext .
-docker run -d --restart unless-stopped -p 4000:4000 --env-file server/.env donext
-```
-
-The image sets `SERVE_CLIENT=true` and includes a health check. Put Nginx or your platform's TLS termination in front of it, as in 3b.
-
-### 4. Link it from your DewanTech website
-
-Add a menu item or button on dewantech.com that links to `https://donext.dewantech.com`.
-
----
-
-## B. Sub-path on your existing website (`dewantech.com/todo/`)
-
-### 1. Deploy the API
-
-Deploy the API on its own subdomain, such as `api.dewantech.com`, following section A with `SERVE_CLIENT=false` and:
-
-```ini
-CORS_ORIGINS=https://dewantech.com,https://www.dewantech.com,capacitor://localhost,https://localhost
-```
-
-### 2. Build the web app for the sub-path
-
-```bash
-# client/.env.production
-VITE_BASE_PATH=/todo/
-VITE_API_URL=https://api.dewantech.com
-```
-
-```bash
-npm run build -w client
-```
-
-### 3. Upload the files
-
-Upload the **contents** of `client/dist/` to the `/todo/` folder of your website, for example `public_html/todo/` on cPanel.
-
-### 4. Add the SPA fallback
-
-Your web server must send unknown paths under `/todo/` to `/todo/index.html`, so links like `/todo/account` work when the page is refreshed.
-
-**Apache / cPanel:** create `public_html/todo/.htaccess`:
+For a **subdomain** (app at the root):
 
 ```apache
 RewriteEngine On
-RewriteBase /todo/
+RewriteBase /
 RewriteRule ^index\.html$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /todo/index.html [L]
+RewriteRule . /index.html [L]
 
-<FilesMatch "^(sw\.js|index\.html|manifest\.webmanifest)$">
-  Header set Cache-Control "no-cache"
-</FilesMatch>
 <IfModule mod_headers.c>
-  <If "%{REQUEST_URI} =~ m#^/todo/assets/#">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </If>
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
 </IfModule>
 ```
+
+For a **folder**, replace both `/` paths with your folder: `RewriteBase /donext/` and `RewriteRule . /donext/index.html [L]`.
 
 **Nginx:**
 
 ```nginx
-location /todo/ {
-    try_files $uri $uri/ /todo/index.html;
+location / {
+    try_files $uri $uri/ /index.html;
 }
-location = /todo/sw.js { add_header Cache-Control "no-cache"; }
-location /todo/assets/ { add_header Cache-Control "public, max-age=31536000, immutable"; }
+location = /sw.js { add_header Cache-Control "no-cache"; }
 ```
 
-### 5. Add security headers (recommended)
+**Netlify / Cloudflare Pages:** build command `npm run build`, publish directory `client/dist`. Add a file `client/public/_redirects` containing `/* /index.html 200`.
 
-In layout B, your static host serves the app, so Express's Helmet headers don't apply to it. Add a CSP on your host that allows the API origin:
+## 4. Check it
 
-```
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.dewantech.com; frame-ancestors 'none'; object-src 'none'
-```
+- [ ] The site opens over **https://**.
+- [ ] Create a profile, add a task, then refresh the page. The task is still there.
+- [ ] Open `/people` directly, and refresh. The page loads.
+- [ ] Turn on airplane mode, then reload. The app still opens with your tasks.
+- [ ] On your phone, **Add to Home Screen** (iPhone: Share menu; Android: ⋮ → Install app).
+- [ ] Tap the microphone in **New task**. It asks for permission and types what you say.
 
----
+## 5. Link it from dewantech.com
 
-## Password reset emails (SMTP)
+Add a menu item or button on your main site that links to the app's address.
 
-DoNext emails a reset link when someone taps **Forgot password?**. To deliver those emails, the server needs an SMTP account. *You sign up for this with your own account.* Any provider works, for example:
+## Updating
 
-- **Amazon SES:** very cheap, requires verifying your domain.
-- **Postmark** or **SendGrid:** quick to set up, with free or low-cost tiers.
-- **Google Workspace / Microsoft 365:** if you already use them for dewantech.com email.
-
-Add these to the server's environment:
-
-```ini
-APP_URL=https://donext.dewantech.com          # where the web app lives (include a sub-path such as /todo if you use one)
-SMTP_HOST=smtp.your-provider.com
-SMTP_PORT=587
-SMTP_SECURE=false                             # true for port 465
-SMTP_USER=your-smtp-username
-SMTP_PASS=your-smtp-password
-MAIL_FROM=DoNext <no-reply@dewantech.com>     # a sender address your provider has verified
-```
-
-To improve delivery, add the SPF and DKIM DNS records your provider gives you for dewantech.com.
-
-- **Without `SMTP_HOST`** (development), reset emails are printed in the server log, so you can copy the link from there.
-- **In production without SMTP**, the server logs a warning at startup, and users won't receive reset emails.
-
-**Test it:** on the login page, tap **Forgot password?**, enter your email, and open the link you receive.
-
-## After deploying: verify
-
-- [ ] `https://<your-url>/api/health` returns `{"ok":true,"db":"connected"}`. In layout B, check this on the API host.
-- [ ] Sign up, add a task, and refresh on a deep link such as `/account`. The page should load.
-- [ ] Chrome DevTools → **Application → Manifest** shows no installability errors, and the **Install** icon appears in the address bar.
-- [ ] Turn on airplane mode, then reload. The app opens with your tasks. Add a task, reconnect, and confirm it syncs ("Synced" in the header).
-- [ ] The microphone works over HTTPS in Chrome, Edge, or Safari.
-- [ ] On a phone:
-  - **Android Chrome:** ⋮ → **Install app**.
-  - **iOS Safari:** Share → **Add to Home Screen**.
-
-## Production checklist
-
-- [ ] `JWT_SECRET` is long, random, and stored only in your host's secret settings. If it ever leaks, rotate it; this logs everyone out.
-- [ ] The MongoDB Atlas network access list is restricted, the database user has the least privilege it needs, and **backups** are enabled.
-- [ ] `NODE_ENV=production` and `TRUST_PROXY` match your proxy setup.
-- [ ] `CORS_ORIGINS` lists only origins you control.
-- [ ] `APP_URL` and the SMTP settings are set, and a test password reset email arrives.
-- [ ] An uptime monitor watches `/api/health`.
-- [ ] Legal page placeholders are completed and reviewed (see the README checklist).
-
-## Updating the app
-
-Deploy the new build the same way. The service worker uses `autoUpdate`, so installed web apps pick up the new version on the next launch after it downloads.
-
-If you change the `Task` schema in the future, keep the sync API backward compatible. Users of the mobile apps may run older versions for a while.
+Run `npm run build` again and upload the new `client/dist/` contents, replacing the old files. Installed copies pick up the update automatically the next time they're opened. **Users' tasks aren't affected:** they live on each user's device, not on your website.

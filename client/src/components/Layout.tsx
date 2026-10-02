@@ -1,14 +1,11 @@
-import { Link, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { Outlet } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import { Alert } from './Alert';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
 export function Layout() {
-  const { status, sessionExpired } = useAuth();
-  const online = useOnlineStatus();
-
+  const { error } = useApp();
   return (
     <div className="flex min-h-screen flex-col">
       <a
@@ -19,20 +16,7 @@ export function Layout() {
       </a>
       <Header />
       <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
-        {!online && status === 'authenticated' && (
-          <Alert kind="warning" className="mb-4">
-            You're offline. You can keep adding and editing tasks — they'll sync automatically when you reconnect.
-          </Alert>
-        )}
-        {sessionExpired && (
-          <Alert kind="warning" className="mb-4">
-            Your session has expired, so syncing is paused. Your tasks on this device are safe.{' '}
-            <Link to="/login" className="font-semibold underline">
-              Log in again
-            </Link>{' '}
-            to resume syncing.
-          </Alert>
-        )}
+        {error && <Alert className="mb-4">{error}</Alert>}
         <Outlet />
       </main>
       <Footer />

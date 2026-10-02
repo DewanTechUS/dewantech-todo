@@ -24,34 +24,71 @@ const faqs: { q: string; a: ReactNode }[] = [
     ),
   },
   {
-    q: 'Does it work without internet?',
-    a: 'Yes. You can add, edit, complete and delete tasks offline. Changes are saved on your device and sync automatically when you reconnect. The menu shows how many changes are waiting.',
-  },
-  {
-    q: 'How do I use it on several devices?',
-    a: 'Log in with the same account on each device. Your tasks sync between them. If the same task is edited on two devices, the most recent change is kept.',
-  },
-  {
-    q: 'I forgot my password.',
+    q: 'How do I share tasks with other people?',
     a: (
       <>
-        On the log in screen, tap <Link to="/forgot-password" className="font-semibold underline">Forgot password?</Link> and we’ll email you a
-        link to choose a new one.
+        Everyone who uses this device can have their own profile. Add people on the{' '}
+        <Link to="/people" className="font-semibold underline">
+          People
+        </Link>{' '}
+        page. When you create a task, choose <strong>Everyone</strong> under “Who can see it” to share it, or <strong>Only me</strong> to
+        keep it private. You can also <strong>assign</strong> a task to someone — they’ll see it in their list.
       </>
     ),
   },
   {
-    q: 'How do I download or delete my data?',
+    q: 'How do I switch to another person?',
+    a: 'Open the menu (☰) and tap Switch, or tap your picture in the top bar on a computer. Then pick a name.',
+  },
+  {
+    q: 'Can people on other phones or computers see my shared tasks?',
     a: (
       <>
-        Go to <Link to="/account" className="font-semibold underline">Account</Link>. Use <strong>Download my data</strong> for a copy of
-        everything, or <strong>Delete account</strong> to permanently erase your account and all tasks.
+        No. DoNext keeps everything on this device and doesn’t use a server, so sharing works between people who use the same device. To
+        copy tasks to another device, use <strong>Download backup</strong> on{' '}
+        <Link to="/data" className="font-semibold underline">
+          Backup & data
+        </Link>
+        , send the file to the other device, and use <strong>Import backup</strong> there.
+      </>
+    ),
+  },
+  {
+    q: 'Does it work without internet?',
+    a: 'Yes. DoNext works fully offline — everything is saved on your device. (Voice input in some browsers needs an internet connection; typing always works.)',
+  },
+  {
+    q: 'How do I keep my tasks safe?',
+    a: (
+      <>
+        Your tasks live only on this device. If you clear your browser data, uninstall the app or lose the device, they’re gone and{' '}
+        <strong>can’t be recovered by DewanTech</strong>. Download a backup regularly from{' '}
+        <Link to="/data" className="font-semibold underline">
+          Backup & data
+        </Link>
+        , and tap <strong>Keep my data</strong> there if your browser offers it.
+      </>
+    ),
+  },
+  {
+    q: 'How do I delete my data?',
+    a: (
+      <>
+        Remove a person on the{' '}
+        <Link to="/people" className="font-semibold underline">
+          People
+        </Link>{' '}
+        page, or delete everything with <strong>Erase everything</strong> on{' '}
+        <Link to="/data" className="font-semibold underline">
+          Backup & data
+        </Link>
+        .
       </>
     ),
   },
   {
     q: 'How do I install it on my phone?',
-    a: 'iPhone (Safari): tap Share → Add to Home Screen. Android (Chrome): tap ⋮ → Install app. It then opens like a regular app and works offline.',
+    a: 'iPhone (Safari): tap Share → Add to Home Screen. Android (Chrome): tap ⋮ → Install app. It then opens like a regular app and works offline. Installing also makes your browser less likely to clear DoNext’s data.',
   },
 ];
 

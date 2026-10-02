@@ -15,8 +15,6 @@ function V({ k, label }: { k: LegalField; label: string }) {
   return value ? <>{value}</> : <Ph>{label}</Ph>;
 }
 
-
-
 function DraftNotice() {
   if (!LEGAL_IS_DRAFT) return null;
   return (
@@ -37,115 +35,90 @@ export function PrivacyPage() {
       <DraftNotice />
 
       <p>
-        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" />,
-        collects, uses and protects information when you use the DoNext web app and mobile apps (the “App”).
+        This policy explains how DoNext (the “App”), provided by {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at{' '}
+        <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" />, handles your information.
       </p>
 
-      <h2>Information we collect</h2>
+      <h2>The short version</h2>
+      <p>
+        <strong>DoNext keeps your data on your device.</strong> There are no accounts, and your names and tasks are not sent to
+        DewanTech or to any server we operate. We cannot see, access, recover or delete your tasks.
+      </p>
+
+      <h2>What the App stores on your device</h2>
       <ul>
         <li>
-          <strong>Account information:</strong> your name, email address, and a securely hashed version of your password (we never
-          store your password in readable form).
+          <strong>People (profiles):</strong> the names and colours you add for people who use the App on this device.
         </li>
         <li>
-          <strong>Your tasks:</strong> titles, descriptions, due dates, priorities, categories and completion status that you enter.
+          <strong>Tasks:</strong> titles, descriptions, due dates, priorities, categories, completion status, and whether each task
+          is private, shared or assigned.
         </li>
         <li>
-          <strong>Technical data:</strong> our servers and hosting provider may log IP addresses, request times and error
-          information for security and reliability. Logs are kept for <V k="logRetention" label="LOG RETENTION PERIOD, e.g. 30 days" />.
+          <strong>Settings:</strong> your theme choice and which profile is currently selected.
         </li>
       </ul>
-      <p>We do not use advertising trackers, sell your personal information, or share it for cross-context behavioural advertising.</p>
+      <p>
+        This information is saved in your browser’s storage (IndexedDB and local storage) or, for the installed app, in the app’s
+        storage on your device. It stays there until you delete it, remove a profile, use <strong>Erase everything</strong>, clear
+        your browser data or uninstall the App.
+      </p>
+
+      <h2>Profiles and other people on your device</h2>
+      <p>
+        Profiles are a convenience for people who share a device; they are not password-protected. Anyone who can use your device
+        can switch profiles and see shared tasks, and could see private tasks by opening that profile. Don’t store sensitive
+        information in DoNext on a shared device.
+      </p>
 
       <h2>Voice input and microphone</h2>
       <p>
-        The microphone is used only when you tap the microphone button, to convert your speech into task text. DewanTech does not
-        record, receive or store audio — only the text you choose to save. Speech recognition is performed by your browser or
-        device's speech service: for example, Google Chrome may send audio to Google, and Apple devices may send audio to Apple, to
-        perform recognition under their own privacy policies. You can deny or revoke microphone permission at any time in your
-        browser or device settings and type tasks instead.
+        The microphone is used only when you tap the microphone button, to turn your speech into task text. DoNext does not record
+        or store audio. Speech recognition is performed by your browser or device’s speech service — for example, Google Chrome may
+        send audio to Google, and Apple devices may send audio to Apple — under their own privacy policies. You can deny or remove
+        microphone permission at any time in your browser or device settings and type instead.
       </p>
 
-      <h2>Data stored on your device</h2>
+      <h2>Backups</h2>
       <p>
-        To work offline, the App stores a copy of your tasks and a sign-in token on your device (browser storage / IndexedDB). This
-        copy is removed when you log out or delete your account.
+        When you use <strong>Download backup</strong>, the App creates a file containing your profiles and tasks and saves it where
+        you choose. That file is under your control; anyone who has it can read its contents. Importing a backup only adds data to
+        the device you import it on.
       </p>
 
-      <h2>How we use information</h2>
+      <h2>Website hosting</h2>
+      <p>
+        If you use DoNext in a web browser, the App’s files are downloaded from our website like any web page. The web server may
+        record standard technical information (such as IP address, browser type and time of request) for security and reliability.
+        This does not include your tasks or profile names.
+      </p>
+
+      <h2>What we don’t do</h2>
       <ul>
-        <li>To provide the App: authenticate you, store and sync your tasks across your devices.</li>
-        <li>To keep the service secure, prevent abuse and fix problems.</li>
-        <li>
-          To send account emails you ask for, such as password reset links, and to tell you about important changes to this policy.
-        </li>
+        <li>We don’t require an account, email address or password.</li>
+        <li>We don’t use advertising, analytics or tracking in the App.</li>
+        <li>We don’t sell or share your personal information.</li>
       </ul>
-      <p>
-        If you are in the European Economic Area, the United Kingdom or a similar jurisdiction, we process your information on these
-        legal bases: to perform our contract with you (providing your account and the App); our legitimate interests (keeping the service
-        secure, preventing abuse and fixing problems); and your consent where we ask for it (for example, microphone access, which you can
-        withdraw at any time in your browser or device settings).
-      </p>
 
-      <h2>Service providers</h2>
+      <h2>Your choices and rights</h2>
       <p>
-        We use the following providers to run the App, who process data on our behalf: hosting — <V k="hostingProvider" label="HOSTING PROVIDER" />; database —{' '}
-        <V k="databaseProvider" label="DATABASE PROVIDER, e.g. MongoDB Atlas" />, region <V k="dataRegion" label="DATA STORAGE REGION" />; email delivery —{' '}
-        <V k="emailProvider" label="EMAIL PROVIDER, e.g. Amazon SES or Postmark" />. Other providers: <V k="otherProviders" label="LIST ANY OTHER PROVIDERS, or none" />.
-      </p>
-
-      <h2>Where your data is processed</h2>
-      <p>
-        Your information is stored in the region listed above and may be processed in other countries where our service providers
-        operate, including the United States. Where the law requires it, we rely on appropriate safeguards (such as our providers'
-        standard contractual clauses) for these transfers.
-      </p>
-
-      <h2>Retention and deletion</h2>
-      <p>
-        We keep your data while your account is active. You can permanently delete your account and all tasks at any time from{' '}
-        <Link to="/account" className="underline">
-          Account → Delete account
+        Because your data stays on your device, you are in control of it: you can view, change, download (
+        <Link to="/data" className="underline">
+          Backup & data
         </Link>
-        . Deleted data is removed from our active database immediately and from backups within <V k="backupRetention" label="BACKUP RETENTION PERIOD" />.
+        ) or delete it at any time. Depending on where you live, you may have privacy rights under laws such as the GDPR (EEA and UK)
+        or the California Consumer Privacy Act. We do not hold your task data, so requests to access or delete it should be carried
+        out in the App itself. For any other privacy question, email{' '}
+        <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />.
       </p>
-
-      <h2>Security</h2>
-      <p>
-        Data is encrypted in transit (HTTPS). Passwords are hashed with bcrypt. Access to each user's tasks is restricted to that
-        user. No method of transmission or storage is completely secure, but we work to protect your information.
-      </p>
-
-      <h2>Your rights</h2>
-      <p>
-        Depending on where you live, you may have rights to access, correct, export or delete your data, and to object to or
-        restrict processing. You can download a copy of your data or delete your account yourself at any time from{' '}
-        <Link to="/account" className="underline">
-          Account
-        </Link>
-        . To exercise any other right, email us at <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" /> from the address linked to your
-        account. We respond within 30 days, or sooner if the law requires.
-      </p>
-      <ul>
-        <li>
-          <strong>EEA and UK residents</strong> have the right to access, correct, delete, restrict or object to the processing of their
-          data, to data portability, to withdraw consent at any time, and to complain to their local data protection authority.
-        </li>
-        <li>
-          <strong>California residents</strong> have the right to know what personal information we collect and how we use it, and to
-          access, correct and delete it, without being treated differently for using these rights. We do not sell or share personal
-          information, as those terms are defined in the California Consumer Privacy Act.
-        </li>
-      </ul>
 
       <h2>Children</h2>
       <p>
-        The App is not directed to children under <V k="minimumAge" label="MINIMUM AGE, e.g. 13 or 16" />, and we do not knowingly collect their personal
-        information.
+        The App is not directed to children under <V k="minimumAge" label="MINIMUM AGE" />.
       </p>
 
       <h2>Changes</h2>
-      <p>We will update this page and the “Last updated” date when this policy changes, and notify you of material changes.</p>
+      <p>We will update this page and the “Last updated” date if this policy changes.</p>
 
       <h2>Contact</h2>
       <p>
@@ -165,49 +138,37 @@ export function TermsPage() {
       <DraftNotice />
 
       <p>
-        These Terms govern your use of DoNext (the “App”), provided by {COMPANY_LEGAL_NAME} (“DewanTech”). By creating
-        an account or using the App you agree to these Terms and our{' '}
+        These Terms govern your use of DoNext (the “App”), provided by {COMPANY_LEGAL_NAME} (“DewanTech”). By using the App you
+        agree to these Terms and our{' '}
         <Link to="/privacy" className="underline">
           Privacy Policy
         </Link>
         .
       </p>
 
-      <h2>Your account</h2>
+      <h2>Using the App</h2>
       <p>
-        You must provide accurate information and keep your password secure. You are responsible for activity under your account.
-        You must be at least <V k="minimumAge" label="MINIMUM AGE" /> years old to use the App.
+        You must be at least <V k="minimumAge" label="MINIMUM AGE" /> years old to use the App. You may add profiles for other people
+        who use your device. Profiles are not password-protected; you are responsible for who can use your device and what is stored
+        in the App.
       </p>
 
       <h2>Your content</h2>
-      <p>
-        You own the tasks and other content you create. You grant DewanTech a limited licence to store, process and transmit that
-        content solely to provide the App to you.
-      </p>
+      <p>You own the tasks and other content you create. It is stored on your device and is not sent to DewanTech.</p>
 
       <h2>Acceptable use</h2>
       <ul>
-        <li>Do not attempt to access other users' data or interfere with the App's security or operation.</li>
         <li>Do not use the App for unlawful purposes or to store unlawful content.</li>
-        <li>Do not reverse engineer or overload the service except as permitted by law.</li>
+        <li>Do not attempt to interfere with the App or the website it is served from.</li>
       </ul>
 
       <h2>Pricing</h2>
       <p>
-        <V k="pricing" label="STATE WHETHER THE APP IS FREE, OR DESCRIBE PAID PLANS (in-app digital purchases on iOS/Android generally must use Apple/Google billing)" />
+        <V k="pricing" label="STATE WHETHER THE APP IS FREE, OR DESCRIBE PAID PLANS" />
       </p>
 
       <h2>Availability and changes</h2>
-      <p>
-        We aim to keep the App available but do not guarantee uninterrupted service. We may modify or discontinue features, and
-        will give reasonable notice of material changes where practical.
-      </p>
-
-      <h2>Termination</h2>
-      <p>
-        You may stop using the App and delete your account at any time. We may suspend or terminate accounts that violate these
-        Terms.
-      </p>
+      <p>We may modify or discontinue the App or any feature at any time.</p>
 
       <h2>Provided “as is”</h2>
       <p>
@@ -219,14 +180,13 @@ export function TermsPage() {
 
       <h2>Your data and backups</h2>
       <p>
-        You are responsible for the tasks and other content you put in the App and for keeping your own copies of anything important.
-        You can download a copy of your data at any time from the{' '}
-        <Link to="/account" className="underline">
-          Account
-        </Link>{' '}
-        page. <strong>DewanTech is not responsible for any loss, corruption or deletion of your data</strong>, for any reason —
-        including service outages, software errors, sync conflicts, problems with your device or browser, or the deletion of your
-        account.
+        Your data is stored only on your device. <strong>You are responsible for keeping backups</strong> (
+        <Link to="/data" className="underline">
+          Backup & data
+        </Link>
+        ). DewanTech cannot recover your data and <strong>is not responsible for any loss, corruption or deletion of your data</strong>,
+        for any reason — including clearing browser data, browser or device problems, storage limits, software errors, another person
+        using your device, or uninstalling the App.
       </p>
 
       <h2>Limitation of liability</h2>

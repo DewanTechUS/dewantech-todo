@@ -1,6 +1,7 @@
 import { formatDueDate, isOverdue } from '../lib/filters';
-import type { Task } from '../lib/types';
-import { CheckIcon, EditIcon, TrashIcon } from './Icons';
+import type { Profile, Task } from '../lib/types';
+import { Avatar } from './Avatar';
+import { CheckIcon, EditIcon, TrashIcon, UsersIcon } from './Icons';
 
 const priorityStyle = {
   high: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200',
@@ -10,13 +11,21 @@ const priorityStyle = {
 
 interface TaskItemProps {
   task: Task;
+  /** The person using the app. */
+  meId?: string;
+  /** Who created the task (if known). */
+  owner?: Profile;
+  /** Who it's assigned to (if anyone). */
+  assignee?: Profile;
   onToggle: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  /** Omit when this person isn't allowed to delete the task. */
+  onDelete?: () => void;
 }
 
-export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
+export function TaskItem({ task, meId, owner, assignee, onToggle, onEdit, onDelete }: TaskItemProps) {
   const overdue = isOverdue(task);
+  const fromSomeoneElse = owner && meId && owner.id !== meId;
   return (
     <li className="card flex items-start gap-3 p-3 sm:p-4">
       <button
@@ -70,6 +79,22 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
               <time dateTime={task.dueDate}>{formatDueDate(task.dueDate)}</time>
             </span>
           )}
+          {task.shared && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-1 text-brand-700 dark:bg-slate-800 dark:text-brand-300">
+              <UsersIcon width={12} height={12} /> Shared
+            </span>
+          )}
+          {fromSomeoneElse && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-0.5 pr-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <Avatar profile={owner} size={20} /> From {owner.name}
+            </span>
+          )}
+          {assignee && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-0.5 pr-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <Avatar profile={assignee} size={20} />
+              {assignee.id === meId ? 'Assigned to you' : `For ${assignee.name}`}
+            </span>
+          )}
         </div>
       </div>
 
@@ -77,14 +102,16 @@ export function TaskItem({ task, onToggle, onEdit, onDelete }: TaskItemProps) {
         <button type="button" onClick={onEdit} className="btn-ghost" aria-label={`Edit “${task.title}”`}>
           <EditIcon />
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="btn-ghost hover:text-red-600 dark:hover:text-red-400"
-          aria-label={`Delete “${task.title}”`}
-        >
-          <TrashIcon />
-        </button>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="btn-ghost hover:text-red-600 dark:hover:text-red-400"
+            aria-label={`Delete “${task.title}”`}
+          >
+            <TrashIcon />
+          </button>
+        )}
       </div>
     </li>
   );

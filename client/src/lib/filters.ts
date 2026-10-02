@@ -51,7 +51,6 @@ export function categoriesOf(tasks: Task[]): string[] {
 export function filterTasks(tasks: Task[], f: TaskFilters): Task[] {
   const q = f.query.trim().toLowerCase();
   const result = tasks.filter((t) => {
-    if (t.deletedAt) return false;
     if (f.status === 'active' && t.completed) return false;
     if (f.status === 'completed' && !t.completed) return false;
     if (f.priority !== 'all' && t.priority !== f.priority) return false;

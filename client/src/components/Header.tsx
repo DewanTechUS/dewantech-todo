@@ -1,29 +1,24 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useTasks } from '../context/TasksContext';
+import { useApp } from '../context/AppContext';
 import { useDialog } from '../hooks/useDialog';
 import { APP_NAME, COMPANY_NAME, COMPANY_SITE_URL, COPYRIGHT, SLOGAN } from '../lib/brand';
+import { Avatar } from './Avatar';
 import { AppWordmark, CompanyLogo } from './Brand';
 import {
   ChevronRightIcon,
   CloseIcon,
-  CloudIcon,
-  CloudOffIcon,
+  DatabaseIcon,
   ExternalIcon,
   FileTextIcon,
   GlobeIcon,
   HelpIcon,
   ListIcon,
-  LogoutIcon,
   MenuIcon,
-  RefreshIcon,
   ShieldIcon,
-  UserIcon,
+  UsersIcon,
 } from './Icons';
-import { Spinner } from './Spinner';
-import { SyncIndicator } from './SyncIndicator';
 import { ThemeToggle } from './ThemeToggle';
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
@@ -35,6 +30,12 @@ interface NavItem {
   Icon: IconType;
 }
 
+const pages: NavItem[] = [
+  { to: '/', label: 'My tasks', end: true, Icon: ListIcon },
+  { to: '/people', label: 'People', end: false, Icon: UsersIcon },
+  { to: '/data', label: 'Backup & data', end: false, Icon: DatabaseIcon },
+];
+
 const desktopNavClass = ({ isActive }: { isActive: boolean }) =>
   `flex min-h-touch items-center rounded-xl px-3 font-medium transition-colors ${
     isActive
@@ -43,9 +44,10 @@ const desktopNavClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Header() {
-  const { status } = useAuth();
+  const { store, me } = useApp();
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   useEffect(() => setOpen(false), [location.pathname]);
 
   // The menu is for phones and tablets; close it if the window grows to desktop width.
@@ -57,13 +59,11 @@ export function Header() {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  const links: NavItem[] =
-    status === 'authenticated'
-      ? [
-          { to: '/', label: 'My tasks', end: true, Icon: ListIcon },
-          { to: '/account', label: 'Account', end: false, Icon: UserIcon },
-        ]
-      : [];
+  const switchPerson = async () => {
+    setOpen(false);
+    await store?.selectProfile(null);
+    navigate('/', { replace: true });
+  };
 
   return (
     <header className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
@@ -72,33 +72,29 @@ export function Header() {
           <AppWordmark />
         </Link>
 
-        {status === 'authenticated' && (
-          <div className="hidden lg:block">
-            <SyncIndicator />
-          </div>
-        )}
-
-        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
-          {status === 'authenticated' ? (
-            links.map((l) => (
+        {me && (
+          <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+            {pages.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end} className={desktopNavClass}>
                 {l.label}
               </NavLink>
-            ))
-          ) : (
-            <>
-              <NavLink to="/login" className={desktopNavClass}>
-                Log in
-              </NavLink>
-              <Link to="/signup" className="btn-primary">
-                Sign up
-              </Link>
-            </>
-          )}
-        </nav>
+            ))}
+          </nav>
+        )}
         <div className="hidden lg:block">
           <ThemeToggle />
         </div>
+        {me && (
+          <button
+            type="button"
+            onClick={() => void switchPerson()}
+            className="hidden min-h-touch items-center gap-2 rounded-xl px-2 hover:bg-slate-100 dark:hover:bg-slate-800 lg:flex"
+            title="Switch person"
+            aria-label={`${me.name} — switch person`}
+          >
+            <Avatar profile={me} size={32} />
+          </button>
+        )}
 
         <button
           type="button"
@@ -113,7 +109,8 @@ export function Header() {
       </div>
 
       {/* Portal: the header's backdrop blur would otherwise trap the fixed-position drawer inside it. */}
-      {open && createPortal(<MobileMenu links={links} onClose={() => setOpen(false)} />, document.body)}
+      {open &&
+        createPortal(<MobileMenu onClose={() => setOpen(false)} onSwitchPerson={() => void switchPerson()} />, document.body)}
     </header>
   );
 }
@@ -143,25 +140,11 @@ function MenuLink({ to, end, label, Icon }: { to: string; end?: boolean; label: 
   );
 }
 
-/** Phone/tablet menu: profile, pages, theme, help & legal, then a one-line company credit. */
-function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void }) {
-  const { user, logout } = useAuth();
-  const { sync } = useTasks();
-  const navigate = useNavigate();
+/** Phone/tablet menu: who's using the app, pages, theme, help & legal, then a one-line company credit. */
+function MobileMenu({ onClose, onSwitchPerson }: { onClose: () => void; onSwitchPerson: () => void }) {
+  const { me, profiles } = useApp();
   const panel = useRef<HTMLDivElement>(null);
   useDialog(panel, onClose, 'button[data-close]');
-
-  const onLogout = async () => {
-    if (
-      sync.pending > 0 &&
-      !window.confirm(`You have ${sync.pending} change(s) that haven't synced yet. Log out anyway and lose them?`)
-    ) {
-      return;
-    }
-    onClose();
-    await logout();
-    navigate('/login', { replace: true });
-  };
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
@@ -183,22 +166,24 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
         </div>
 
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 [&>*]:shrink-0">
-          {user ? (
-            <ProfileCard name={user.name} email={user.email} />
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <Link to="/signup" className="btn-primary px-2 text-sm">
-                Sign up free
-              </Link>
-              <Link to="/login" className="btn-secondary px-2 text-sm">
-                Log in
-              </Link>
+          {me && (
+            <div className="card flex items-center gap-3 py-2.5 pl-3 pr-2">
+              <Avatar profile={me} size={40} />
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-[15px] font-semibold">{me.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {profiles.length > 1 ? `${profiles.length} people on this device` : 'Saved on this device'}
+                </p>
+              </div>
+              <button type="button" className="btn-secondary min-h-[40px] px-3 text-sm" onClick={onSwitchPerson}>
+                Switch
+              </button>
             </div>
           )}
 
-          {links.length > 0 && (
+          {me && (
             <MenuGroup label="Pages">
-              {links.map((l) => (
+              {pages.map((l) => (
                 <MenuLink key={l.to} {...l} />
               ))}
             </MenuGroup>
@@ -221,18 +206,6 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
-            {user && (
-              <li>
-                <button
-                  type="button"
-                  onClick={() => void onLogout()}
-                  className="flex min-h-touch w-full items-center gap-3 px-3 text-[15px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-                >
-                  <LogoutIcon className="shrink-0" width={18} height={18} />
-                  Log out
-                </button>
-              </li>
-            )}
           </MenuGroup>
 
           <div className="mt-auto pt-2 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
@@ -244,80 +217,6 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** Compact profile: avatar, name, email and a one-line sync status with a sync button. */
-function ProfileCard({ name, email }: { name: string; email: string }) {
-  const { store, sync } = useTasks();
-  const initials =
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]!.toUpperCase())
-      .join('') || '?';
-
-  const busy = sync.status === 'syncing';
-  const plural = (n: number) => `${n} change${n > 1 ? 's' : ''}`;
-  const label =
-    sync.status === 'syncing'
-      ? 'Syncing…'
-      : sync.status === 'offline'
-        ? sync.pending
-          ? `Offline · ${plural(sync.pending)} waiting`
-          : 'Offline'
-        : sync.status === 'error'
-          ? 'Sync problem'
-          : sync.pending
-            ? `${plural(sync.pending)} to sync`
-            : 'All synced';
-  const tone =
-    sync.status === 'offline'
-      ? 'text-amber-700 dark:text-amber-400'
-      : sync.status === 'error'
-        ? 'text-red-600 dark:text-red-400'
-        : 'text-success-600 dark:text-success-500';
-
-  return (
-    <div className="card flex items-center gap-3 py-2.5 pl-3 pr-1">
-      <span
-        aria-hidden
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-900 text-sm font-bold text-white"
-      >
-        {initials}
-      </span>
-      <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-[15px] font-semibold">{name}</p>
-        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{email}</p>
-        {store && (
-          <p
-            className={`mt-0.5 flex items-center gap-1 text-xs font-medium ${tone}`}
-            aria-live="polite"
-            title={sync.lastSyncedAt ? `Last synced ${new Date(sync.lastSyncedAt).toLocaleString()}` : undefined}
-          >
-            {sync.status === 'offline' || sync.status === 'error' ? (
-              <CloudOffIcon width={13} height={13} />
-            ) : (
-              <CloudIcon width={13} height={13} />
-            )}
-            {label}
-          </p>
-        )}
-      </div>
-      {store && (
-        <button
-          type="button"
-          className="btn-ghost min-h-touch min-w-touch shrink-0"
-          disabled={busy}
-          onClick={() => void store.syncNow()}
-          aria-label="Sync now"
-          title="Sync now"
-        >
-          {busy ? <Spinner className="h-4 w-4" label="Syncing" /> : <RefreshIcon width={18} height={18} />}
-        </button>
-      )}
     </div>
   );
 }

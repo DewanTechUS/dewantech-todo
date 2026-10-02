@@ -1,31 +1,41 @@
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Alert } from '../components/Alert';
 import { FilterBar } from '../components/FilterBar';
-import { PlusIcon } from '../components/Icons';
+import { PlusIcon, UsersIcon } from '../components/Icons';
 import { Modal } from '../components/Modal';
 import { PageLoader } from '../components/Spinner';
-import { TaskForm } from '../components/TaskForm';
+import { TaskForm, emptyFields } from '../components/TaskForm';
 import { TaskItem } from '../components/TaskItem';
-import { useAuth } from '../context/AuthContext';
-import { useTasks } from '../context/TasksContext';
+import { useApp } from '../context/AppContext';
 import { categoriesOf, defaultFilters, filterTasks, type TaskFilters } from '../lib/filters';
 import type { Task } from '../lib/types';
+import { canDelete, tasksForView, type TaskView } from '../lib/visibility';
+
+const views: { value: TaskView; label: string }[] = [
+  { value: 'mine', label: 'My tasks' },
+  { value: 'shared', label: 'Shared' },
+  { value: 'all', label: 'All tasks' },
+];
 
 export default function TasksPage() {
-  const { user } = useAuth();
-  const { store, tasks, sync, loading, storageError } = useTasks();
+  const { store, tasks, profiles, me } = useApp();
+  const [view, setView] = useState<TaskView>('mine');
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const location = useLocation();
-  const [passwordReset, setPasswordReset] = useState(() => Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset));
 
-  const categories = useMemo(() => categoriesOf(tasks), [tasks]);
-  const visible = useMemo(() => filterTasks(tasks, filters), [tasks, filters]);
-  const activeCount = tasks.filter((t) => !t.completed).length;
+  const multi = profiles.length > 1;
+  const byId = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
+  const profileIds = useMemo(() => new Set(profiles.map((p) => p.id)), [profiles]);
+  const inView = useMemo(() => (me ? tasksForView(tasks, me.id, multi ? view : 'mine') : []), [tasks, me, view, multi]);
+  const categories = useMemo(() => categoriesOf(inView), [inView]);
+  const visible = useMemo(() => filterTasks(inView, filters), [inView, filters]);
+  const activeCount = inView.filter((t) => !t.completed).length;
+
+  if (!store || !me) return <PageLoader label="Loading your tasks…" />;
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -36,20 +46,15 @@ export default function TasksPage() {
     }
   };
 
-  if (storageError) return <Alert>{storageError}</Alert>;
-  if (loading || !store) return <PageLoader label="Loading your tasks…" />;
+  const showSharedEmpty = multi && view === 'shared';
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {user ? `Hi, ${user.name.split(' ')[0]}` : 'My tasks'}
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Hi, {me.name.split(' ')[0]}</h1>
           <p className="text-slate-600 dark:text-slate-400" aria-live="polite">
-            {tasks.length === 0
-              ? 'No tasks yet.'
-              : `${activeCount} active · ${tasks.length - activeCount} done`}
+            {inView.length === 0 ? 'Nothing here yet.' : `${activeCount} active · ${inView.length - activeCount} done`}
           </p>
         </div>
         <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setCreating(true)}>
@@ -57,32 +62,47 @@ export default function TasksPage() {
         </button>
       </div>
 
-      {sync.error && (
-        <Alert kind="warning">
-          {sync.error}{' '}
-          <button type="button" className="font-semibold underline" onClick={() => void store.syncNow()}>
-            Retry
-          </button>
-        </Alert>
+      {multi && (
+        <div role="group" aria-label="Which tasks to show" className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800 sm:inline-grid">
+          {views.map((v) => (
+            <button
+              key={v.value}
+              type="button"
+              aria-pressed={view === v.value}
+              onClick={() => setView(v.value)}
+              className={`min-h-[40px] rounded-lg px-4 text-sm font-medium ${
+                view === v.value ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
       )}
-      {passwordReset && (
-        <Alert kind="success" onDismiss={() => setPasswordReset(false)}>
-          Your password has been changed and you're signed in. Other devices have been signed out.
-        </Alert>
-      )}
+
       {actionError && <Alert onDismiss={() => setActionError(null)}>{actionError}</Alert>}
 
-      {tasks.length > 0 && <FilterBar filters={filters} categories={categories} onChange={setFilters} />}
+      {inView.length > 0 && <FilterBar filters={filters} categories={categories} onChange={setFilters} />}
 
-      {tasks.length === 0 ? (
-        <div className="card flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <p className="text-lg font-semibold">Your list is empty</p>
+      {inView.length === 0 ? (
+        <div className="card flex flex-col items-center gap-3 px-6 py-12 text-center">
+          <p className="text-lg font-semibold">{showSharedEmpty ? 'No shared tasks yet' : 'Your list is empty'}</p>
           <p className="max-w-sm text-slate-600 dark:text-slate-400">
-            Add your first task by typing or with the microphone. Tasks are saved on this device and synced to your account.
+            {showSharedEmpty
+              ? 'Shared tasks are visible to everyone who uses DoNext on this device. Choose “Everyone” when you create a task.'
+              : 'Add your first task by typing or with the microphone.'}
           </p>
           <button type="button" className="btn-primary mt-2" onClick={() => setCreating(true)}>
             <PlusIcon /> Add a task
           </button>
+          {!multi && (
+            <Link
+              to="/people"
+              className="mt-1 inline-flex min-h-touch items-center gap-2 text-sm font-semibold text-brand-700 underline dark:text-brand-300"
+            >
+              <UsersIcon width={16} height={16} /> Share this device? Add people
+            </Link>
+          )}
         </div>
       ) : visible.length === 0 ? (
         <div className="card px-6 py-10 text-center">
@@ -97,9 +117,12 @@ export default function TasksPage() {
             <TaskItem
               key={task.id}
               task={task}
-              onToggle={() => void run(() => store.toggle(task.id))}
+              meId={me.id}
+              owner={byId.get(task.ownerId)}
+              assignee={task.assigneeId ? byId.get(task.assigneeId) : undefined}
+              onToggle={() => void run(() => store.toggleTask(task.id))}
               onEdit={() => setEditing(task)}
-              onDelete={() => setDeleting(task)}
+              onDelete={canDelete(task, me.id, profileIds) ? () => setDeleting(task) : undefined}
             />
           ))}
         </ul>
@@ -109,11 +132,14 @@ export default function TasksPage() {
         <Modal title="New task" onClose={() => setCreating(false)}>
           <TaskForm
             voice
+            initial={{ ...emptyFields, shared: view === 'shared' && multi }}
             categories={categories}
+            people={profiles}
+            meId={me.id}
             submitLabel="Add task"
             onCancel={() => setCreating(false)}
             onSubmit={async (fields) => {
-              await store.create(fields);
+              await store.createTask(fields);
               setCreating(false);
             }}
           />
@@ -125,10 +151,12 @@ export default function TasksPage() {
           <TaskForm
             initial={editing}
             categories={categories}
+            people={profiles}
+            meId={me.id}
             submitLabel="Save changes"
             onCancel={() => setEditing(null)}
             onSubmit={async (fields) => {
-              await store.update(editing.id, fields);
+              await store.updateTask(editing.id, fields);
               setEditing(null);
             }}
           />
@@ -138,7 +166,7 @@ export default function TasksPage() {
       {deleting && (
         <Modal title="Delete task?" onClose={() => setDeleting(null)}>
           <p className="mb-5 text-slate-700 dark:text-slate-300">
-            “{deleting.title}” will be deleted from all your devices. This can't be undone.
+            “{deleting.title}” will be deleted{deleting.shared ? ' for everyone on this device' : ''}. This can’t be undone.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" className="btn-secondary" onClick={() => setDeleting(null)}>
@@ -150,7 +178,7 @@ export default function TasksPage() {
               onClick={() => {
                 const id = deleting.id;
                 setDeleting(null);
-                void run(() => store.remove(id));
+                void run(() => store.deleteTask(id));
               }}
             >
               Delete

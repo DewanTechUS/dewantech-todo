@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
-import { PRIORITIES, type Priority, type TaskFields } from '../lib/types';
+import { PRIORITIES, type Priority, type Profile, type TaskFields } from '../lib/types';
+import { LockIcon, UsersIcon } from './Icons';
 import { Alert } from './Alert';
 import { Spinner } from './Spinner';
 import { VoiceInput } from './VoiceInput';
@@ -12,6 +13,8 @@ export const emptyFields: TaskFields = {
   priority: 'medium',
   category: '',
   completed: false,
+  shared: false,
+  assigneeId: null,
 };
 
 export function validateTask(f: TaskFields): Partial<Record<keyof TaskFields, string>> {
@@ -27,6 +30,10 @@ export function validateTask(f: TaskFields): Partial<Record<keyof TaskFields, st
 interface TaskFormProps {
   initial?: TaskFields;
   categories: string[];
+  /** People on this device (for sharing and assigning). */
+  people?: Profile[];
+  /** The person using the app right now. */
+  meId?: string;
   submitLabel: string;
   onSubmit: (fields: TaskFields) => Promise<void>;
   onCancel?: () => void;
@@ -38,7 +45,17 @@ interface TaskFormProps {
   speech?: SpeechService;
 }
 
-export function TaskForm({ initial = emptyFields, categories, submitLabel, onSubmit, onCancel, voice, speech }: TaskFormProps) {
+export function TaskForm({
+  initial = emptyFields,
+  categories,
+  people = [],
+  meId,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  voice,
+  speech,
+}: TaskFormProps) {
   const [fields, setFields] = useState<TaskFields>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof TaskFields, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,6 +71,8 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
     category: `${id}-category`,
     categories: `${id}-categories`,
     details: `${id}-details`,
+    assignee: `${id}-assignee`,
+    visibility: `${id}-visibility`,
   };
 
   const set = <K extends keyof TaskFields>(key: K, value: TaskFields[K]) => {
@@ -123,6 +142,55 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
       )}
     </div>
   );
+
+  const segment = (active: boolean) =>
+    `flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors ${
+      active ? 'bg-white text-brand-700 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-slate-600 dark:text-slate-300'
+    }`;
+  const assigneeName = people.find((p) => p.id === fields.assigneeId)?.name;
+
+  // Sharing only makes sense when more than one person uses this device.
+  const sharingFields =
+    people.length > 1 ? (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <span className="label" id={ids.visibility}>
+            Who can see it
+          </span>
+          <div role="group" aria-labelledby={ids.visibility} className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button type="button" aria-pressed={!fields.shared} className={segment(!fields.shared)} onClick={() => set('shared', false)}>
+              <LockIcon width={16} height={16} /> Only me
+            </button>
+            <button type="button" aria-pressed={fields.shared} className={segment(fields.shared)} onClick={() => set('shared', true)}>
+              <UsersIcon width={16} height={16} /> Everyone
+            </button>
+          </div>
+        </div>
+        <div>
+          <label htmlFor={ids.assignee} className="label">
+            Assign to
+          </label>
+          <select
+            id={ids.assignee}
+            className="input"
+            value={fields.assigneeId ?? ''}
+            onChange={(e) => set('assigneeId', e.target.value || null)}
+          >
+            <option value="">Nobody</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.id === meId ? `${p.name} (me)` : p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {!fields.shared && fields.assigneeId && fields.assigneeId !== meId && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 sm:col-span-2">
+            Private, but {assigneeName ?? 'the assignee'} can also see it because it's assigned to them.
+          </p>
+        )}
+      </div>
+    ) : null;
 
   const detailFields = (
     <div id={ids.details} className="space-y-4">
@@ -216,6 +284,8 @@ export function TaskForm({ initial = emptyFields, categories, submitLabel, onSub
       {formError && <Alert onDismiss={() => setFormError(null)}>{formError}</Alert>}
 
       {titleField}
+
+      {sharingFields}
 
       {voice ? (
         <>
