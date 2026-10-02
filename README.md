@@ -268,6 +268,6 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 
 ## License
 
-The code is released under the [MIT License](LICENSE). © 2026 Dewan Global LLC dba DewanTech™.
+© 2026 Dewan Global LLC dba DewanTech™. All rights reserved.
 
-The **DoNext** and **DewanTech** names, logos and slogan are trademarks and are **not** covered by the MIT License. See [TRADEMARKS.md](TRADEMARKS.md).
+This repository is public for viewing only. You may not use, copy, modify or distribute the code, logos or branding without written permission. See [LICENSE](LICENSE).
