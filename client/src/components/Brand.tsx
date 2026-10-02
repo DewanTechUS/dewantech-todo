@@ -41,19 +41,34 @@ export function CompanyLogo({ size = 40 }: { size?: number }) {
   );
 }
 
+/** One-line company credit for footers: small logo, copyright, and the slogan on wide screens. */
+export function CompanyLine({ className = '' }: { className?: string }) {
+  return (
+    <p className={`flex min-w-0 items-center gap-2 ${className}`}>
+      <a href={COMPANY_SITE_URL} rel="noopener" className="shrink-0 rounded-md" aria-label={`${COMPANY_NAME} website`}>
+        <img src={companyLogo} width={20} height={20} alt="" className="rounded" draggable={false} />
+      </a>
+      <span className="truncate">
+        {COPYRIGHT}
+        <span className="hidden italic xl:inline"> · {SLOGAN}</span>
+      </span>
+    </p>
+  );
+}
+
 /** Company credit block: DewanTech logo, name, slogan and copyright. */
 export function CompanyCredit({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'text-left'}`}>
       <a href={COMPANY_SITE_URL} rel="noopener" className="rounded-xl" aria-label={`${COMPANY_NAME} website`}>
-        <CompanyLogo size={compact ? 40 : 44} />
+        <CompanyLogo size={compact ? 32 : 44} />
       </a>
       <div className="min-w-0 leading-tight">
-        <p className="font-semibold text-slate-800 dark:text-slate-100">
+        <p className={`font-semibold text-slate-800 dark:text-slate-100 ${compact ? 'text-sm' : ''}`}>
           {APP_NAME} <span className="font-normal text-slate-500 dark:text-slate-400">by</span> {COMPANY_NAME}
         </p>
-        <p className="text-sm italic text-slate-500 dark:text-slate-400">{SLOGAN}</p>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{COPYRIGHT}</p>
+        <p className={`italic text-slate-500 dark:text-slate-400 ${compact ? 'text-xs' : 'text-sm'}`}>{SLOGAN}</p>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{COPYRIGHT}</p>
       </div>
     </div>
   );

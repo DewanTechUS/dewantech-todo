@@ -4,8 +4,8 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { useDialog } from '../hooks/useDialog';
-import { APP_NAME, COMPANY_SITE_URL } from '../lib/brand';
-import { AppWordmark, CompanyCredit } from './Brand';
+import { APP_NAME, COMPANY_NAME, COMPANY_SITE_URL, COPYRIGHT, SLOGAN } from '../lib/brand';
+import { AppWordmark, CompanyLogo } from './Brand';
 import {
   ChevronRightIcon,
   CloseIcon,
@@ -118,17 +118,16 @@ export function Header() {
   );
 }
 
-const sectionTitle = 'mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
 const rowClass =
-  'flex min-h-[52px] items-center gap-3 px-4 font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800';
-const activeRowClass = 'flex min-h-[52px] items-center gap-3 bg-brand-50 px-4 font-medium text-brand-700 dark:bg-slate-800 dark:text-white';
+  'flex min-h-touch items-center gap-3 px-3 text-[15px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800';
+const activeRowClass = 'flex min-h-touch items-center gap-3 bg-brand-50 px-3 text-[15px] font-medium text-brand-700 dark:bg-slate-800 dark:text-white';
 
-function MenuSection({ title, children }: { title: string; children: ReactNode }) {
+/** A group of rows in one rounded card. */
+function MenuGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section aria-label={title}>
-      <h2 className={sectionTitle}>{title}</h2>
-      <ul className="card divide-y divide-slate-100 overflow-hidden dark:divide-slate-800">{children}</ul>
-    </section>
+    <ul aria-label={label} className="card divide-y divide-slate-100 overflow-hidden dark:divide-slate-800">
+      {children}
+    </ul>
   );
 }
 
@@ -136,15 +135,15 @@ function MenuLink({ to, end, label, Icon }: { to: string; end?: boolean; label: 
   return (
     <li>
       <NavLink to={to} end={end} className={({ isActive }) => (isActive ? activeRowClass : rowClass)}>
-        <Icon className="shrink-0" />
+        <Icon className="shrink-0 text-slate-400" width={18} height={18} />
         <span className="flex-1">{label}</span>
-        <ChevronRightIcon className="text-slate-400" />
+        <ChevronRightIcon className="text-slate-300 dark:text-slate-600" width={16} height={16} />
       </NavLink>
     </li>
   );
 }
 
-/** Phone/tablet menu, organised into sections: profile, navigation, settings, legal, then company credit. */
+/** Phone/tablet menu: profile, pages, theme, help & legal, then a one-line company credit. */
 function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void }) {
   const { user, logout } = useAuth();
   const { sync } = useTasks();
@@ -174,75 +173,74 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
         aria-modal="true"
         aria-label="Menu"
         tabIndex={-1}
-        className="safe-top safe-bottom absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col bg-slate-50 shadow-2xl dark:bg-slate-950"
+        className="safe-top safe-bottom absolute inset-y-0 right-0 flex w-[84%] max-w-xs flex-col bg-slate-50 shadow-2xl dark:bg-slate-950"
       >
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-          <AppWordmark size={32} />
+        <div className="flex items-center justify-between border-b border-slate-200 bg-white py-1.5 pl-4 pr-2 dark:border-slate-800 dark:bg-slate-900">
+          <AppWordmark size={28} />
           <button type="button" data-close className="btn-ghost" aria-label="Close menu" onClick={onClose}>
-            <CloseIcon width={24} height={24} />
+            <CloseIcon />
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 [&>*]:shrink-0">
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 [&>*]:shrink-0">
           {user ? (
             <ProfileCard name={user.name} email={user.email} />
           ) : (
-            <div className="card space-y-3 p-4 text-center">
-              <p className="font-semibold">Welcome to {APP_NAME}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Capture tasks by voice or typing — online or offline.</p>
-              <div className="grid gap-2">
-                <Link to="/signup" className="btn-primary">
-                  Create free account
-                </Link>
-                <Link to="/login" className="btn-secondary">
-                  Log in
-                </Link>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Link to="/signup" className="btn-primary px-2 text-sm">
+                Sign up free
+              </Link>
+              <Link to="/login" className="btn-secondary px-2 text-sm">
+                Log in
+              </Link>
             </div>
           )}
 
           {links.length > 0 && (
-            <MenuSection title="Navigate">
+            <MenuGroup label="Pages">
               {links.map((l) => (
                 <MenuLink key={l.to} {...l} />
               ))}
-            </MenuSection>
+            </MenuGroup>
           )}
 
-          <section aria-label="Settings">
-            <h2 className={sectionTitle}>Settings</h2>
-            <div className="card p-3">
-              <p className="mb-2 px-1 text-sm font-medium text-slate-700 dark:text-slate-200">Theme</p>
-              <ThemeToggle labeled />
-            </div>
-          </section>
+          <div className="card flex items-center justify-between gap-2 py-1 pl-3 pr-1">
+            <span className="text-[15px] font-medium text-slate-700 dark:text-slate-200">Theme</span>
+            <ThemeToggle />
+          </div>
 
-          <MenuSection title="Help & legal">
+          <MenuGroup label="Help and legal">
             <MenuLink to="/support" label="Help & Support" Icon={HelpIcon} />
             <MenuLink to="/privacy" label="Privacy Policy" Icon={ShieldIcon} />
             <MenuLink to="/terms" label="Terms of Service" Icon={FileTextIcon} />
             <li>
               <a href={COMPANY_SITE_URL} target="_blank" rel="noopener noreferrer" className={rowClass}>
-                <GlobeIcon className="shrink-0" />
+                <GlobeIcon className="shrink-0 text-slate-400" width={18} height={18} />
                 <span className="flex-1">DewanTech.com</span>
-                <ExternalIcon className="text-slate-400" width={18} height={18} />
+                <ExternalIcon className="text-slate-300 dark:text-slate-600" width={16} height={16} />
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
-          </MenuSection>
+            {user && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => void onLogout()}
+                  className="flex min-h-touch w-full items-center gap-3 px-3 text-[15px] font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                >
+                  <LogoutIcon className="shrink-0" width={18} height={18} />
+                  Log out
+                </button>
+              </li>
+            )}
+          </MenuGroup>
 
-          {user && (
-            <button
-              type="button"
-              onClick={() => void onLogout()}
-              className="card flex min-h-[52px] items-center justify-center gap-2 font-semibold text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-            >
-              <LogoutIcon /> Log out
-            </button>
-          )}
-
-          <div className="mt-auto border-t border-slate-200 pt-4 dark:border-slate-800">
-            <CompanyCredit compact />
+          <div className="mt-auto pt-2 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+            <a href={COMPANY_SITE_URL} rel="noopener" className="mb-1 inline-block rounded" aria-label={`${COMPANY_NAME} website`}>
+              <CompanyLogo size={24} />
+            </a>
+            <p>{COPYRIGHT}</p>
+            <p className="italic">{SLOGAN}</p>
           </div>
         </div>
       </div>
@@ -250,7 +248,7 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
   );
 }
 
-/** Avatar, name and email, plus sync status with a "Sync now" button. */
+/** Compact profile: avatar, name, email and a one-line sync status with a sync button. */
 function ProfileCard({ name, email }: { name: string; email: string }) {
   const { store, sync } = useTasks();
   const initials =
@@ -274,7 +272,7 @@ function ProfileCard({ name, email }: { name: string; email: string }) {
           ? 'Sync problem'
           : sync.pending
             ? `${plural(sync.pending)} to sync`
-            : 'All changes synced';
+            : 'All synced';
   const tone =
     sync.status === 'offline'
       ? 'text-amber-700 dark:text-amber-400'
@@ -283,44 +281,42 @@ function ProfileCard({ name, email }: { name: string; email: string }) {
         : 'text-success-600 dark:text-success-500';
 
   return (
-    <div className="card overflow-hidden">
-      <div className="flex items-center gap-3 p-4">
-        <span
-          aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-900 text-lg font-bold text-white"
-        >
-          {initials}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{name}</p>
-          <p className="truncate text-sm text-slate-500 dark:text-slate-400">{email}</p>
-        </div>
-      </div>
-      {store && (
-        <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/60 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/40">
-          <span
-            className={`flex min-w-0 items-center gap-2 text-sm font-medium ${tone}`}
+    <div className="card flex items-center gap-3 py-2.5 pl-3 pr-1">
+      <span
+        aria-hidden
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-brand-900 text-sm font-bold text-white"
+      >
+        {initials}
+      </span>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-[15px] font-semibold">{name}</p>
+        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{email}</p>
+        {store && (
+          <p
+            className={`mt-0.5 flex items-center gap-1 text-xs font-medium ${tone}`}
             aria-live="polite"
             title={sync.lastSyncedAt ? `Last synced ${new Date(sync.lastSyncedAt).toLocaleString()}` : undefined}
           >
-            {busy ? (
-              <Spinner className="h-4 w-4" label="Syncing" />
-            ) : sync.status === 'offline' || sync.status === 'error' ? (
-              <CloudOffIcon width={18} height={18} />
+            {sync.status === 'offline' || sync.status === 'error' ? (
+              <CloudOffIcon width={13} height={13} />
             ) : (
-              <CloudIcon width={18} height={18} />
+              <CloudIcon width={13} height={13} />
             )}
-            <span className="truncate">{label}</span>
-          </span>
-          <button
-            type="button"
-            className="btn-ghost min-h-[40px] gap-1.5 px-2 text-sm"
-            disabled={busy}
-            onClick={() => void store.syncNow()}
-          >
-            <RefreshIcon width={16} height={16} /> Sync now
-          </button>
-        </div>
+            {label}
+          </p>
+        )}
+      </div>
+      {store && (
+        <button
+          type="button"
+          className="btn-ghost min-h-touch min-w-touch shrink-0"
+          disabled={busy}
+          onClick={() => void store.syncNow()}
+          aria-label="Sync now"
+          title="Sync now"
+        >
+          {busy ? <Spinner className="h-4 w-4" label="Syncing" /> : <RefreshIcon width={18} height={18} />}
+        </button>
       )}
     </div>
   );

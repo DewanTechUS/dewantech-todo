@@ -30,7 +30,7 @@ describe('Header mobile menu', () => {
 
     const menu = screen.getByRole('dialog', { name: 'Menu' });
     expect(within(menu).getByRole('link', { name: 'Log in' })).toBeInTheDocument();
-    expect(within(menu).getByRole('link', { name: 'Create free account' })).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Sign up free' })).toBeInTheDocument();
     expect(within(menu).getByRole('group', { name: 'Color theme' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Help & Support' })).toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: 'Privacy Policy' })).toBeInTheDocument();

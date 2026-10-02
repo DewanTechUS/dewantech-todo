@@ -1,8 +1,8 @@
 import type { ComponentType, SVGProps } from 'react';
 import { Link } from 'react-router-dom';
-import { AppLogo, CompanyCredit } from '../components/Brand';
+import { AppLogo, CompanyLogo } from '../components/Brand';
 import { CheckIcon, CloudIcon, MicIcon, ShieldIcon } from '../components/Icons';
-import { APP_NAME } from '../lib/brand';
+import { APP_NAME, COPYRIGHT, SLOGAN } from '../lib/brand';
 
 const features: { title: string; text: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
   { title: 'Just say it', text: 'Tap the mic and talk — your words appear as you speak. Fix anything, then tap the arrow.', Icon: MicIcon },
@@ -64,9 +64,11 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      <div className="flex justify-center lg:hidden">
-        <CompanyCredit compact />
-      </div>
+      <footer className="flex flex-col items-center gap-1.5 border-t border-slate-200 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 lg:hidden">
+        <CompanyLogo size={28} />
+        <p>{COPYRIGHT}</p>
+        <p className="italic">{SLOGAN}</p>
+      </footer>
     </div>
   );
 }
