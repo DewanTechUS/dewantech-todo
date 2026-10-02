@@ -1,32 +1,7 @@
 /// <reference types="vitest/config" />
-import { defineConfig, loadEnv, type Plugin } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-
-/**
- * Production builds get a strict Content-Security-Policy as a <meta> tag, because DoNext is
- * served as static files (no server of ours to send security headers). Dev is left alone
- * so hot reloading keeps working.
- */
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  "connect-src 'self'",
-  "worker-src 'self'",
-  "manifest-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join('; ');
-
-const cspMeta = (): Plugin => ({
-  name: 'donext-csp',
-  apply: 'build',
-  transformIndexHtml: (html) => html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`),
-});
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -36,7 +11,6 @@ export default defineConfig(({ mode }) => {
     base,
     plugins: [
       react(),
-      cspMeta(),
       VitePWA({
         // Registered manually in main.tsx so it can be skipped inside Capacitor native shells.
         injectRegister: null,
@@ -45,7 +19,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'DoNext',
           short_name: 'DoNext',
-          description: 'The to-do list you can talk to. Everything stays on your device.',
+          description: 'Plan, capture and finish your tasks — online or offline.',
           theme_color: '#012360',
           background_color: '#012360',
           display: 'standalone',
@@ -62,10 +36,16 @@ export default defineConfig(({ mode }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
           navigateFallback: `${base}index.html`,
+          navigateFallbackDenylist: [/^\/api\//],
+          // API data is cached in IndexedDB by the app itself, never by the service worker.
+          runtimeCaching: [{ urlPattern: /\/api\//, handler: 'NetworkOnly' }],
         },
       }),
     ],
-    server: { port: 5173 },
+    server: {
+      port: 5173,
+      proxy: { '/api': { target: env.VITE_DEV_API_PROXY || 'http://localhost:4000', changeOrigin: true } },
+    },
     test: {
       environment: 'jsdom',
       setupFiles: ['src/test/setup.ts'],

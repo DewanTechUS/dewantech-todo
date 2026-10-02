@@ -13,11 +13,9 @@ const task = (overrides: Partial<Task>): Task => {
     priority: 'medium',
     category: '',
     completed: false,
-    shared: false,
-    assigneeId: null,
-    ownerId: 'me',
     createdAt: new Date(2026, 0, n).toISOString(),
     updatedAt: new Date(2026, 0, n).toISOString(),
+    deletedAt: null,
     ...overrides,
   };
 };
@@ -28,10 +26,11 @@ describe('filterTasks', () => {
     task({ title: 'Buy groceries', description: 'milk, eggs', category: 'Home', priority: 'low' }),
     task({ title: 'Gym', category: 'health', completed: true, dueDate: '2026-09-01' }),
     task({ title: 'Email Sam', description: 'about the report', category: 'work', dueDate: '2026-10-02' }),
+    task({ title: 'Deleted', deletedAt: '2026-01-01T00:00:00.000Z' }),
   ];
   const titles = (f: Partial<typeof defaultFilters>) => filterTasks(tasks, { ...defaultFilters, ...f }).map((t) => t.title);
 
-  it('sorts open tasks first, then by due date (undated last)', () => {
+  it('hides deleted tasks and sorts open tasks first, then by due date (undated last)', () => {
     expect(titles({})).toEqual(['Email Sam', 'Write quarterly report', 'Buy groceries', 'Gym']);
   });
 

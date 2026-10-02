@@ -1,69 +1,82 @@
-import { lazy, Suspense, type ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
+import { GuestOnly, RequireAuth } from './components/RequireAuth';
 import { PageLoader } from './components/Spinner';
-import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { TasksProvider } from './context/TasksContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from './pages/AuthPages';
 import { NotFoundPage, PrivacyPage, TermsPage } from './pages/LegalPages';
 
 const TasksPage = lazy(() => import('./pages/TasksPage'));
-const WelcomePage = lazy(() => import('./pages/WelcomePage'));
-const PeoplePage = lazy(() => import('./pages/PeoplePage'));
-const DataPage = lazy(() => import('./pages/DataPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const SupportPage = lazy(() => import('./pages/SupportPage'));
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 
-/** "/" shows the task list for the current person, or "Who's using DoNext?" if nobody is selected. */
+/** Signed-in users see their tasks at "/", visitors see the landing page. */
 function Home() {
-  const { loading, me } = useApp();
-  if (loading) return <PageLoader />;
-  return me ? <TasksPage /> : <WelcomePage />;
+  const { status } = useAuth();
+  return status === 'authenticated' ? <TasksPage /> : <LandingPage />;
 }
 
-/** Pages that need someone to be selected first. */
-function RequirePerson({ children }: { children: ReactNode }) {
-  const { loading, me } = useApp();
-  if (loading) return <PageLoader />;
-  return me ? <>{children}</> : <Navigate to="/" replace />;
-}
-
-export default function App({ dbName }: { dbName?: string }) {
+export default function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AppProvider dbName={dbName}>
-          <BrowserRouter basename={basename}>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route
-                    path="people"
-                    element={
-                      <RequirePerson>
-                        <PeoplePage />
-                      </RequirePerson>
-                    }
-                  />
-                  <Route
-                    path="data"
-                    element={
-                      <RequirePerson>
-                        <DataPage />
-                      </RequirePerson>
-                    }
-                  />
-                  <Route path="support" element={<SupportPage />} />
-                  <Route path="privacy" element={<PrivacyPage />} />
-                  <Route path="terms" element={<TermsPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </AppProvider>
+        <AuthProvider>
+          <TasksProvider>
+            <BrowserRouter basename={basename}>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route
+                      path="account"
+                      element={
+                        <RequireAuth>
+                          <AccountPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="login"
+                      element={
+                        <GuestOnly>
+                          <LoginPage />
+                        </GuestOnly>
+                      }
+                    />
+                    <Route
+                      path="signup"
+                      element={
+                        <GuestOnly>
+                          <SignupPage />
+                        </GuestOnly>
+                      }
+                    />
+                    <Route
+                      path="forgot-password"
+                      element={
+                        <GuestOnly>
+                          <ForgotPasswordPage />
+                        </GuestOnly>
+                      }
+                    />
+                    <Route path="reset-password" element={<ResetPasswordPage />} />
+                    <Route path="support" element={<SupportPage />} />
+                    <Route path="privacy" element={<PrivacyPage />} />
+                    <Route path="terms" element={<TermsPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TasksProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

@@ -36,8 +36,6 @@ describe('TaskForm', () => {
       priority: 'high',
       category: 'Work',
       completed: false,
-      shared: false,
-      assigneeId: null,
     });
   });
 

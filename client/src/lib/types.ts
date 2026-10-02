@@ -1,16 +1,6 @@
 export const PRIORITIES = ['low', 'medium', 'high'] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
-/** A person using DoNext on this device. */
-export interface Profile {
-  id: string;
-  name: string;
-  /** Avatar colour (hex). */
-  color: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface TaskFields {
   title: string;
   description: string;
@@ -19,25 +9,41 @@ export interface TaskFields {
   priority: Priority;
   category: string;
   completed: boolean;
-  /** Visible to everyone on this device. Private tasks are only visible to their creator (and assignee). */
-  shared: boolean;
-  /** Profile the task is assigned to, if any. The assignee can always see it. */
-  assigneeId: string | null;
 }
 
 export interface Task extends TaskFields {
   id: string;
-  /** Profile that created the task. */
-  ownerId: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
-/** Contents of a backup file (Download backup / Import backup). */
-export interface Backup {
-  app: 'DoNext';
-  version: 1;
-  exportedAt: string;
-  profiles: Profile[];
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface Session {
+  token: string;
+  user: User;
+}
+
+export type SyncChange =
+  | { op: 'upsert'; id: string; updatedAt: string; createdAt: string; data: TaskFields }
+  | { op: 'delete'; id: string; updatedAt: string };
+
+/** A queued change waiting to be pushed. `rev` guards against removing a newer edit made mid-sync. */
+export type OutboxEntry = SyncChange & { rev: number };
+
+export interface SyncRequest {
+  since: string | null;
+  changes: SyncChange[];
+}
+
+export interface SyncResponse {
   tasks: Task[];
+  results: Array<{ id: string | null; status: 'applied' | 'stale' | 'rejected'; reason?: string }>;
+  cursor: string;
 }
