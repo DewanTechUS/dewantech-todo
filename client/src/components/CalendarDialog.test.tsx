@@ -22,23 +22,22 @@ const task: Task = {
 
 describe('CalendarDialog', () => {
   it.each([
-    ['apple', 'Add to Apple Calendar'],
-    ['android', 'Add to Google Calendar'],
-    ['windows', 'Add to Outlook / Windows Calendar'],
-    ['other', 'Add to Google Calendar'],
-  ] as const)('on %s devices, shows one main button: "%s"', async (platform, primary) => {
+    // [device, what the single "Add to calendar" button is, the other calendars offered]
+    ['apple', 'button', ['Google Calendar', 'Outlook / Windows Calendar']],
+    ['android', 'link', ['Apple Calendar', 'Outlook / Windows Calendar']],
+    ['windows', 'button', ['Google Calendar', 'Apple Calendar']],
+    ['other', 'link', ['Apple Calendar', 'Outlook / Windows Calendar']],
+  ] as const)('on %s devices, one "Add to calendar" %s picks the right calendar', async (platform, kind, others) => {
     const user = userEvent.setup();
     render(<CalendarDialog task={task} onClose={vi.fn()} platform={platform} />);
-    expect(screen.getByText(primary).closest('a,button')).toHaveClass('btn-primary');
-    // Only one calendar button until the user asks for others.
-    const calendarControls = () => [...screen.queryAllByRole('link'), ...screen.queryAllByRole('button')].filter((el) => /Calendar/.test(el.textContent ?? ''));
-    expect(calendarControls()).toHaveLength(1);
+    const main = screen.getByRole(kind, { name: /^Add to calendar/ });
+    expect(main).toHaveClass('btn-primary');
+    // Google opens its website; Apple and Outlook get a calendar file.
+    if (kind === 'link') expect(main.getAttribute('href')).toMatch(/^https:\/\/calendar\.google\.com\//);
+    for (const name of others) expect(screen.queryByText(name)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Use another calendar' }));
-    const names = calendarControls().map((el) => el.textContent ?? '');
-    for (const name of ['Google Calendar', 'Apple Calendar', 'Outlook / Windows Calendar']) {
-      expect(names.some((n) => n.includes(name))).toBe(true);
-    }
+    for (const name of others) expect(screen.getByText(name)).toBeInTheDocument();
   });
 
   it('defaults to 9:00, or the next hour if 9:00 has already passed today', () => {
@@ -58,7 +57,7 @@ describe('CalendarDialog', () => {
     await user.type(screen.getByLabelText('Time'), '18:15');
     await user.selectOptions(screen.getByLabelText('Remind me'), '1440');
 
-    const link = screen.getByRole('link', { name: /Google Calendar/ });
+    const link = screen.getByRole('link', { name: /^Add to calendar/ });
     const url = new URL(link.getAttribute('href')!);
     expect(url.searchParams.get('text')).toBe('Pay rent');
     expect(url.searchParams.get('dates')).toBe('20261101T181500/20261101T184500');
@@ -75,7 +74,7 @@ describe('CalendarDialog', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
     render(<CalendarDialog task={task} onClose={vi.fn()} platform="apple" />);
-    await user.click(screen.getByRole('button', { name: /Add to Apple Calendar/ }));
+    await user.click(screen.getByRole('button', { name: 'Add to calendar' }));
 
     expect(click).toHaveBeenCalled();
     expect(created[0].type).toBe('text/calendar');

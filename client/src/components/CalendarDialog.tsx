@@ -119,7 +119,8 @@ export function CalendarDialog({ task, onClose, platform = currentPlatform() }: 
     const cls = isPrimary
       ? `btn-primary w-full text-lg ${valid ? '' : 'pointer-events-none opacity-60'}`
       : 'inline-flex min-h-touch items-center rounded-lg px-2 text-sm font-semibold text-brand-700 underline dark:text-brand-300';
-    const label = isPrimary ? `Add to ${LABELS[option]}` : LABELS[option];
+    // The main button opens this device's calendar automatically, so it just says "Add to calendar".
+    const label = isPrimary ? 'Add to calendar' : LABELS[option];
     const icon = isPrimary ? <CalendarIcon /> : null;
     if (option === 'google') {
       return (
@@ -145,7 +146,7 @@ export function CalendarDialog({ task, onClose, platform = currentPlatform() }: 
   };
 
   return (
-    <Modal title="Add reminder" onClose={onClose}>
+    <Modal title="Add to calendar" onClose={onClose}>
       <div className="space-y-4">
         <p className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-100">
           <BellIcon className="shrink-0 text-brand-600" />
