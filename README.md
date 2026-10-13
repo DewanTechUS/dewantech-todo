@@ -4,7 +4,10 @@
 
 **▶ [Try the live demo](https://dewantechus.github.io/donext/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
 
+Built by **[Dewan Mahmud](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)** · DewanTech™: *Technology Built with Purpose.*
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Dewan%20Mahmud-0a66c2?logo=linkedin)](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Tests](https://img.shields.io/badge/tests-137%20passing-22c55e)
 ![PWA](https://img.shields.io/badge/PWA-offline%20ready-5a0fc8)
@@ -329,6 +332,16 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 - [ ] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` (permanent after the first store release) and `appName`.
 - [x] Icons and splash screens are generated from your logos in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
 - [ ] `server/.env`: a real `JWT_SECRET`, production `MONGODB_URI`, and `CORS_ORIGINS`.
+
+## About the author
+
+DoNext was designed and built by **Dewan Mahmud**, founder of **DewanTech™** (Dewan Global LLC): *Technology Built with Purpose.*
+
+- 💼 LinkedIn: [linkedin.com/in/dewan-mahmud-a579a0265](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
+- 🌐 Website: [dewantech.com](https://dewantech.com)
+- ✉️ Email: [info@dewantech.com](mailto:info@dewantech.com)
+
+Feedback, ideas and opportunities are welcome.
 
 ## License
 
