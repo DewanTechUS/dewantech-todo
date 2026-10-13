@@ -21,9 +21,25 @@ const task: Task = {
 };
 
 describe('CalendarDialog', () => {
+  it.each([
+    ['apple', 'Add to Apple Calendar'],
+    ['android', 'Add to Google Calendar'],
+    ['windows', 'Add to Outlook / Windows Calendar'],
+    ['other', 'Add to Google Calendar'],
+  ] as const)('on %s devices, offers "%s" first and the others below', (platform, primary) => {
+    render(<CalendarDialog task={task} onClose={vi.fn()} platform={platform} />);
+    const all = screen.getAllByRole('link').concat(screen.getAllByRole('button').filter((b) => /Calendar/.test(b.textContent ?? '')));
+    const primaryEl = screen.getByText(primary).closest('a,button')!;
+    expect(primaryEl).toHaveClass('btn-primary');
+    // Every calendar is still available.
+    for (const name of ['Google Calendar', 'Apple Calendar', 'Outlook / Windows Calendar']) {
+      expect(all.some((el) => el.textContent?.includes(name))).toBe(true);
+    }
+  });
+
   it('builds a Google Calendar link from the chosen date, time and reminder', async () => {
     const user = userEvent.setup();
-    render(<CalendarDialog task={task} onClose={vi.fn()} />);
+    render(<CalendarDialog task={task} onClose={vi.fn()} platform="other" />);
     expect(screen.getByLabelText('Date')).toHaveValue('2026-11-01'); // defaults to the due date
 
     await user.clear(screen.getByLabelText('Time'));
@@ -46,7 +62,7 @@ describe('CalendarDialog', () => {
     URL.revokeObjectURL = vi.fn();
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
-    render(<CalendarDialog task={task} onClose={vi.fn()} />);
+    render(<CalendarDialog task={task} onClose={vi.fn()} platform="other" />);
     await user.click(screen.getByRole('button', { name: /Apple Calendar/ }));
 
     expect(click).toHaveBeenCalled();

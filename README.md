@@ -47,7 +47,7 @@ To **run your own server** for real accounts and sync across devices, follow [Mo
   - The owner can rename the list, invite or remove people, or delete it; members can leave.
   - Tabs: Personal, each shared list, and All. A red badge shows pending invitations.
 - **Privacy:** personal tasks are visible only to their creator; shared-list tasks only to that list's members. Nobody else can read or change them (covered by tests). Each account also gets its own offline database on the device, and that database is erased when you log out.
-- **Calendar reminders:** the 📅 button on a task adds it to **Google Calendar** (opens pre-filled) or to **Apple Calendar or Outlook** (a standard .ics file with the reminder built in). You pick the date, time and when to be reminded, and the calendar app sends the notification. It works on iPhone, Android and desktop with no server or push setup.
+- **Calendar reminders:** the 📅 button on a task adds it to **Google Calendar** (opens pre-filled) or to **Apple Calendar or Outlook** (a standard .ics file with the reminder built in). You pick the date, time and when to be reminded, and the calendar app sends the notification. The dialog **detects the device** and offers its calendar first: Apple Calendar on iPhone, iPad and Mac, Google Calendar on Android, and Outlook or Windows Calendar on Windows. The other options stay available. It works on iPhone, Android and desktop with no server or push setup.
 - **Voice input:**
   - A microphone button turns speech into text.
   - Before the first permission prompt, a short note explains why the app needs the microphone.
@@ -188,7 +188,7 @@ Other useful commands:
 npm test
 ```
 
-There are 98 tests.
+There are 104 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.
@@ -202,7 +202,7 @@ There are 98 tests.
 - Password reset: emailed single-use links, only a hash stored, expiry, the same answer for unknown emails, and other devices signed out afterwards.
 - Changing name and password, and exporting only your own data.
 
-**Client: 55 tests.** Vitest, Testing Library, and fake IndexedDB.
+**Client: 61 tests.** Vitest, Testing Library, and fake IndexedDB.
 - Calendar reminders: the Google Calendar link, and a standards-compliant .ics file (escaping, line folding, reminder), plus the dialog.
 - Shared lists are kept for offline use, and tasks from lists you've left are removed.
 - The task form's List and Assign to fields.

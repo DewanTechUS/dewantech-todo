@@ -18,6 +18,34 @@ export interface CalendarEvent {
   uid: string;
 }
 
+export type CalendarPlatform = 'apple' | 'android' | 'windows' | 'other';
+
+interface PlatformHints {
+  /** Capacitor platform when running as a native app ('ios' | 'android' | 'web'). */
+  nativePlatform?: string;
+  userAgent?: string;
+  /** navigator.userAgentData.platform where available (Chromium). */
+  uaPlatform?: string;
+  maxTouchPoints?: number;
+}
+
+/**
+ * Picks the calendar this device most likely uses, so the right button can be offered first:
+ * iPhone/iPad/Mac → Apple Calendar, Android → Google Calendar, Windows → Outlook/Windows Calendar.
+ */
+export function detectCalendarPlatform(h: PlatformHints = {}): CalendarPlatform {
+  if (h.nativePlatform === 'ios') return 'apple';
+  if (h.nativePlatform === 'android') return 'android';
+  const ua = h.userAgent ?? '';
+  const platform = (h.uaPlatform ?? '').toLowerCase();
+  if (platform === 'android' || /Android/i.test(ua)) return 'android';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'apple';
+  // iPadOS reports itself as a Mac; Macs and iPads both use Apple Calendar.
+  if (platform === 'macos' || /Macintosh|Mac OS X/i.test(ua)) return 'apple';
+  if (platform === 'windows' || /Windows/i.test(ua)) return 'windows';
+  return 'other';
+}
+
 export const REMINDER_OPTIONS: { minutes: number; label: string }[] = [
   { minutes: 0, label: 'At the time' },
   { minutes: 10, label: '10 minutes before' },
