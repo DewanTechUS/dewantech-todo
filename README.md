@@ -4,10 +4,11 @@
 
 **▶ [Try the live demo](https://dewantechus.github.io/donext/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
 
-Built by **[Dewan Mahmud](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)** · DewanTech™: *Technology Built with Purpose.*
+Built by **[Dewan Mahmud](https://dewanmahmud.com)** · DewanTech™: *Technology Built with Purpose.*
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Dewan%20Mahmud-0a66c2?logo=linkedin)](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
+[![Website](https://img.shields.io/badge/Website-dewanmahmud.com-012360)](https://dewanmahmud.com)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Tests](https://img.shields.io/badge/tests-137%20passing-22c55e)
 ![PWA](https://img.shields.io/badge/PWA-offline%20ready-5a0fc8)
@@ -338,7 +339,8 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 DoNext was designed and built by **Dewan Mahmud**, founder of **DewanTech™** (Dewan Global LLC): *Technology Built with Purpose.*
 
 - 💼 LinkedIn: [linkedin.com/in/dewan-mahmud-a579a0265](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
-- 🌐 Website: [dewantech.com](https://dewantech.com)
+- 🌐 Portfolio: [dewanmahmud.com](https://dewanmahmud.com)
+- 🏢 Company: [dewantech.com](https://dewantech.com)
 - ✉️ Email: [dewan.swe@gmail.com](mailto:dewan.swe@gmail.com)
 
 Feedback, ideas and opportunities are welcome.
