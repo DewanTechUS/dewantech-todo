@@ -2,7 +2,7 @@
 
 **The to-do list you can talk to.** DoNext is a mobile-friendly, offline-first, open-source task app by DewanTech™. It has voice input, shared lists and offline sync, and is packaged for iOS and Android.
 
-**▶ [Try the live demo](https://dewantechus.github.io/dewantech-todo/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
+**▶ [Try the live demo](https://dewantechus.github.io/donext/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 

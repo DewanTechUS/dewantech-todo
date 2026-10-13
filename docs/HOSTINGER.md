@@ -16,7 +16,7 @@ You need:
 2. **Email sending (SMTP)** for password reset emails. Options:
    - The email service that comes with your Hostinger plan, if you use Hostinger email for dewantech.com: `smtp.hostinger.com`, port `465`, secure.
    - Amazon SES, Postmark, SendGrid and so on.
-3. **The GitHub repo**, `DewanTechUS/dewantech-todo` (it can stay private).
+3. **The GitHub repo**, `DewanTechUS/donext` (or your own fork).
 
 ---
 
@@ -28,7 +28,7 @@ In hPanel, go to **Domains → Subdomains** and create `donext.dewantech.com`. Y
 
 In hPanel, go to **Websites → Add website → Node.js Web App**. The menu names may differ slightly. Then:
 
-1. Choose **Import from GitHub** and authorise Hostinger's GitHub App for the **DewanTechUS/dewantech-todo** repository. This is needed because the repo is private.
+1. Choose **Import from GitHub** and authorise Hostinger's GitHub App for the **DewanTechUS/donext** repository (or your fork).
 2. Pick branch **main**.
 3. Enter these **build settings**:
 
