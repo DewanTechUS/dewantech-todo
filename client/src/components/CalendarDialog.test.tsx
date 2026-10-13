@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Task } from '../lib/types';
-import { CalendarDialog } from './CalendarDialog';
+import { CalendarDialog, defaultTime } from './CalendarDialog';
 
 const task: Task = {
   id: 't1',
@@ -26,15 +26,27 @@ describe('CalendarDialog', () => {
     ['android', 'Add to Google Calendar'],
     ['windows', 'Add to Outlook / Windows Calendar'],
     ['other', 'Add to Google Calendar'],
-  ] as const)('on %s devices, offers "%s" first and the others below', (platform, primary) => {
+  ] as const)('on %s devices, shows one main button: "%s"', async (platform, primary) => {
+    const user = userEvent.setup();
     render(<CalendarDialog task={task} onClose={vi.fn()} platform={platform} />);
-    const all = screen.getAllByRole('link').concat(screen.getAllByRole('button').filter((b) => /Calendar/.test(b.textContent ?? '')));
-    const primaryEl = screen.getByText(primary).closest('a,button')!;
-    expect(primaryEl).toHaveClass('btn-primary');
-    // Every calendar is still available.
+    expect(screen.getByText(primary).closest('a,button')).toHaveClass('btn-primary');
+    // Only one calendar button until the user asks for others.
+    const calendarControls = () => [...screen.queryAllByRole('link'), ...screen.queryAllByRole('button')].filter((el) => /Calendar/.test(el.textContent ?? ''));
+    expect(calendarControls()).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Use another calendar' }));
+    const names = calendarControls().map((el) => el.textContent ?? '');
     for (const name of ['Google Calendar', 'Apple Calendar', 'Outlook / Windows Calendar']) {
-      expect(all.some((el) => el.textContent?.includes(name))).toBe(true);
+      expect(names.some((n) => n.includes(name))).toBe(true);
     }
+  });
+
+  it('defaults to 9:00, or the next hour if 9:00 has already passed today', () => {
+    const at = (h: number, m = 0) => new Date(2026, 9, 12, h, m);
+    expect(defaultTime('2026-10-12', at(7, 30))).toBe('09:00');
+    expect(defaultTime('2026-10-12', at(14, 20))).toBe('15:00');
+    expect(defaultTime('2026-10-12', at(23, 40))).toBe('23:00');
+    expect(defaultTime('2026-10-20', at(14, 20))).toBe('09:00'); // another day
   });
 
   it('builds a Google Calendar link from the chosen date, time and reminder', async () => {
@@ -62,8 +74,8 @@ describe('CalendarDialog', () => {
     URL.revokeObjectURL = vi.fn();
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
-    render(<CalendarDialog task={task} onClose={vi.fn()} platform="other" />);
-    await user.click(screen.getByRole('button', { name: /Apple Calendar/ }));
+    render(<CalendarDialog task={task} onClose={vi.fn()} platform="apple" />);
+    await user.click(screen.getByRole('button', { name: /Add to Apple Calendar/ }));
 
     expect(click).toHaveBeenCalled();
     expect(created[0].type).toBe('text/calendar');

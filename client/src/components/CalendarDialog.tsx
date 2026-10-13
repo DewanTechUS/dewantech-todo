@@ -60,6 +60,12 @@ function currentPlatform(): CalendarPlatform {
   });
 }
 
+/** 9:00 AM, or — if that has already passed today — the next whole hour (so the reminder isn't in the past). */
+export function defaultTime(date: string, now = new Date()): string {
+  if (date !== todayISO(now) || now.getHours() < 9) return '09:00';
+  return `${String(Math.min(now.getHours() + 1, 23)).padStart(2, '0')}:00`;
+}
+
 interface CalendarDialogProps {
   task: Task;
   onClose: () => void;
@@ -70,8 +76,9 @@ interface CalendarDialogProps {
 /** Lets the user add a task to their calendar with a reminder — their device's calendar is offered first. */
 export function CalendarDialog({ task, onClose, platform = currentPlatform() }: CalendarDialogProps) {
   const [date, setDate] = useState(task.dueDate ?? todayISO());
-  const [time, setTime] = useState('09:00');
+  const [time, setTime] = useState(() => defaultTime(task.dueDate ?? todayISO()));
   const [reminder, setReminder] = useState(30);
+  const [showOthers, setShowOthers] = useState(false);
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const id = useId();
 
@@ -109,8 +116,11 @@ export function CalendarDialog({ task, onClose, platform = currentPlatform() }: 
   const others = (['google', 'apple', 'outlook'] as CalendarOption[]).filter((o) => o !== primary);
 
   const renderOption = (option: CalendarOption, isPrimary: boolean) => {
-    const cls = `${isPrimary ? 'btn-primary w-full text-lg' : 'btn-secondary text-sm'} ${valid ? '' : 'pointer-events-none opacity-60'}`;
+    const cls = isPrimary
+      ? `btn-primary w-full text-lg ${valid ? '' : 'pointer-events-none opacity-60'}`
+      : 'inline-flex min-h-touch items-center rounded-lg px-2 text-sm font-semibold text-brand-700 underline dark:text-brand-300';
     const label = isPrimary ? `Add to ${LABELS[option]}` : LABELS[option];
+    const icon = isPrimary ? <CalendarIcon /> : null;
     if (option === 'google') {
       return (
         <a
@@ -122,26 +132,24 @@ export function CalendarDialog({ task, onClose, platform = currentPlatform() }: 
           onClick={(e) => !valid && e.preventDefault()}
           className={cls}
         >
-          <CalendarIcon /> {label}
+          {icon} {label}
           <span className="sr-only">(opens in a new tab)</span>
         </a>
       );
     }
     return (
       <button key={option} type="button" className={cls} disabled={!valid} onClick={() => void onIcs(option)}>
-        <CalendarIcon /> {label}
+        {icon} {label}
       </button>
     );
   };
 
   return (
-    <Modal title="Add to calendar" onClose={onClose}>
+    <Modal title="Add reminder" onClose={onClose}>
       <div className="space-y-4">
-        <p className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-          <BellIcon className="mt-0.5 shrink-0 text-brand-600" />
-          <span>
-            Get a reminder for <strong>“{task.title}”</strong>. Your calendar app will notify you.
-          </span>
+        <p className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-100">
+          <BellIcon className="shrink-0 text-brand-600" />
+          <span className="min-w-0 truncate">{task.title}</span>
         </p>
 
         <div className="grid grid-cols-2 gap-3">
@@ -179,14 +187,22 @@ export function CalendarDialog({ task, onClose, platform = currentPlatform() }: 
 
         {renderOption(primary, true)}
 
-        <div>
-          <p className="mb-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400">Use a different calendar</p>
-          <div className="grid gap-2 sm:grid-cols-2">{others.map((o) => renderOption(o, false))}</div>
+        <div className="text-center">
+          {showOthers ? (
+            <div className="flex flex-wrap items-center justify-center gap-x-2 text-sm text-slate-500 dark:text-slate-400">
+              <span>Other calendars:</span>
+              {others.map((o) => renderOption(o, false))}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="min-h-touch rounded-lg px-3 text-sm text-slate-500 underline hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+              onClick={() => setShowOthers(true)}
+            >
+              Use another calendar
+            </button>
+          )}
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Google Calendar uses your usual notification settings. Apple Calendar and Outlook get a calendar file (.ics) with the reminder
-          built in.
-        </p>
       </div>
     </Modal>
   );

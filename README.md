@@ -188,7 +188,7 @@ Other useful commands:
 npm test
 ```
 
-There are 104 tests.
+There are 105 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.
@@ -202,7 +202,7 @@ There are 104 tests.
 - Password reset: emailed single-use links, only a hash stored, expiry, the same answer for unknown emails, and other devices signed out afterwards.
 - Changing name and password, and exporting only your own data.
 
-**Client: 61 tests.** Vitest, Testing Library, and fake IndexedDB.
+**Client: 62 tests.** Vitest, Testing Library, and fake IndexedDB.
 - Calendar reminders: the Google Calendar link, and a standards-compliant .ics file (escaping, line folding, reminder), plus the dialog.
 - Shared lists are kept for offline use, and tasks from lists you've left are removed.
 - The task form's List and Assign to fields.
