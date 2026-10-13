@@ -1,6 +1,8 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { IS_DEMO } from '../lib/api';
+import { REPO_URL } from '../lib/brand';
 import { Alert } from './Alert';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -18,6 +20,14 @@ export function Layout() {
         Skip to content
       </a>
       <Header />
+      {IS_DEMO && (
+        <div role="note" className="border-b border-brand-100 bg-brand-50 px-4 py-2 text-center text-xs text-brand-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 sm:text-sm">
+          <strong>Live demo</strong> — everything you add stays in this browser only. Free & open source (MIT).{' '}
+          <a href={REPO_URL} rel="noopener" className="font-semibold underline">
+            Get the code
+          </a>
+        </div>
+      )}
       <main id="main" className="safe-pb-6 mx-auto w-full max-w-5xl flex-1 px-4 pt-6">
         {!online && status === 'authenticated' && (
           <Alert kind="warning" className="mb-4">

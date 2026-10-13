@@ -162,6 +162,7 @@ export function ForgotPasswordPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
+  const [resetPath, setResetPath] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -169,8 +170,9 @@ export function ForgotPasswordPage() {
     setBusy(true);
     setError(null);
     try {
-      const { message } = await api.forgotPassword(email.trim());
+      const { message, resetPath: path } = await api.forgotPassword(email.trim());
       setSent(message);
+      setResetPath(path ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
@@ -182,7 +184,16 @@ export function ForgotPasswordPage() {
     <AuthCard title="Reset your password" subtitle="Enter your email and we'll send you a link to choose a new password.">
       {sent ? (
         <div className="space-y-4">
-          <Alert kind="success">{sent} Check your inbox (and spam folder). The link expires in 60 minutes.</Alert>
+          {resetPath ? (
+            <>
+              <Alert kind="info">{sent}</Alert>
+              <Link to={resetPath} className="btn-primary w-full">
+                Choose a new password
+              </Link>
+            </>
+          ) : (
+            <Alert kind="success">{sent} Check your inbox (and spam folder). The link expires in 60 minutes.</Alert>
+          )}
           <Link to="/login" className="btn-secondary w-full">
             Back to log in
           </Link>

@@ -24,6 +24,8 @@ interface AuthValue {
   /** Changes the password; other devices are signed out, this one stays signed in. */
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   markExpired: () => void;
+  /** Demo build only: signs in to a new guest account with sample data. */
+  startDemo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -91,6 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clear(session.user.id);
       },
       markExpired,
+      startDemo: async () => {
+        if (!api.demoStart) throw new Error('The instant demo is only available in the demo version.');
+        start(await api.demoStart());
+      },
       resetPassword: async (resetToken, password) => start(await api.resetPassword(resetToken, password)),
       updateName: async (name) => {
         if (!session) return;

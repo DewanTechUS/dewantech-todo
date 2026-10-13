@@ -1,21 +1,16 @@
+import { ApiError } from './apiError';
+import { createDemoApi } from './demoApi';
 import type { ListInvite, Session, SharedList, SyncRequest, SyncResponse, User } from './types';
+
+export { ApiError };
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public fields: Record<string, string> = {},
-  ) {
-    super(message);
-  }
-
-  /** True when the request never reached the server (offline, DNS, CORS, server down). */
-  get isNetwork() {
-    return this.status === 0;
-  }
-}
+/**
+ * Demo builds (VITE_DEMO=true, e.g. the GitHub Pages live demo) run without a server:
+ * the API below is replaced by an in-browser imitation that stores everything in localStorage.
+ */
+export const IS_DEMO = import.meta.env.VITE_DEMO === 'true';
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -56,7 +51,7 @@ export async function apiFetch<T>(path: string, { method = 'GET', body, token, s
   return data as T;
 }
 
-export const api = {
+const realApi = {
   signup: (body: { name: string; email: string; password: string }) =>
     apiFetch<Session>('/api/auth/signup', { method: 'POST', body }),
   login: (body: { email: string; password: string }) => apiFetch<Session>('/api/auth/login', { method: 'POST', body }),
@@ -65,7 +60,10 @@ export const api = {
   deleteAccount: (token: string, password: string) =>
     apiFetch<void>('/api/auth/me', { method: 'DELETE', token, body: { password } }),
   forgotPassword: (email: string) =>
-    apiFetch<{ message: string }>('/api/auth/forgot-password', { method: 'POST', body: { email } }),
+    apiFetch<{ message: string; /** demo only: no email is sent, so the link is returned */ resetPath?: string }>(
+      '/api/auth/forgot-password',
+      { method: 'POST', body: { email } },
+    ),
   resetPassword: (token: string, password: string) =>
     apiFetch<Session>('/api/auth/reset-password', { method: 'POST', body: { token, password } }),
   updateProfile: (token: string, name: string) => apiFetch<{ user: User }>('/api/auth/me', { method: 'PATCH', token, body: { name } }),
@@ -89,4 +87,10 @@ export const api = {
       apiFetch<{ list: SharedList }>(`/api/lists/${id}/members/${userId}`, { method: 'DELETE', token }),
     leave: (token: string, id: string) => apiFetch<void>(`/api/lists/${id}/leave`, { method: 'POST', token }),
   },
+  /** Demo only: creates a ready-to-explore account with sample tasks and a shared list. */
+  demoStart: undefined as undefined | (() => Promise<Session>),
 };
+
+export type Api = typeof realApi;
+
+export const api: Api = IS_DEMO ? createDemoApi() : realApi;

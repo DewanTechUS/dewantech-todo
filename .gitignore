@@ -9,3 +9,4 @@ coverage/
 .DS_Store
 client/dev-dist/
 server/.data/
+!client/.env.demo

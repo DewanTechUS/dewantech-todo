@@ -1,9 +1,13 @@
-import type { ComponentType, SVGProps } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, type ComponentType, type SVGProps } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { Alert } from '../components/Alert';
 import { AppLogo, CompanyLogo } from '../components/Brand';
 import { CheckIcon, CloudIcon, MicIcon, ShieldIcon } from '../components/Icons';
-import { Capacitor } from '@capacitor/core';
-import { APP_NAME, COPYRIGHT, SLOGAN } from '../lib/brand';
+import { Spinner } from '../components/Spinner';
+import { useAuth } from '../context/AuthContext';
+import { IS_DEMO } from '../lib/api';
+import { APP_NAME, COPYRIGHT, REPO_URL, SLOGAN } from '../lib/brand';
 
 /** Inside the iOS/Android app, browser-only tips (Add to Home Screen) don't apply. */
 const isNativeApp = Capacitor.isNativePlatform();
@@ -17,6 +21,23 @@ const features: { title: string; text: string; Icon: ComponentType<SVGProps<SVGS
 
 /** Public home page for visitors who are not signed in. */
 export default function LandingPage() {
+  const { startDemo } = useAuth();
+  const navigate = useNavigate();
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const tryDemo = async () => {
+    setStarting(true);
+    setError(null);
+    try {
+      await startDemo();
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not start the demo.');
+      setStarting(false);
+    }
+  };
+
   return (
     <div className="space-y-14 py-4 sm:py-10">
       <section className="flex flex-col items-center text-center">
@@ -29,13 +50,40 @@ export default function LandingPage() {
           or offline.
         </p>
         <div className="mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-          <Link to="/signup" className="btn-primary px-8 text-lg">
-            Get started — it’s free
-          </Link>
-          <Link to="/login" className="btn-secondary px-8 text-lg">
-            Log in
-          </Link>
+          {IS_DEMO ? (
+            <>
+              <button type="button" className="btn-primary px-8 text-lg" onClick={() => void tryDemo()} disabled={starting}>
+                {starting && <Spinner className="h-5 w-5" label="Starting demo" />}
+                Try it instantly — no sign-up
+              </button>
+              <Link to="/signup" className="btn-secondary px-8 text-lg">
+                Create an account
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/signup" className="btn-primary px-8 text-lg">
+                Get started — it’s free
+              </Link>
+              <Link to="/login" className="btn-secondary px-8 text-lg">
+                Log in
+              </Link>
+            </>
+          )}
         </div>
+        {IS_DEMO && (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            Open source · MIT License ·{' '}
+            <a href={REPO_URL} rel="noopener" className="font-semibold text-brand-700 underline dark:text-brand-300">
+              View the code on GitHub
+            </a>
+          </p>
+        )}
+        {error && (
+          <Alert className="mt-4 w-full max-w-md text-left" onDismiss={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
       </section>
 
       <section aria-labelledby="features-h">

@@ -8,6 +8,9 @@ export const COPYRIGHT = `© ${new Date().getFullYear()} ${COMPANY_LEGAL_NAME}`;
 /** Confirm this is your company website. */
 export const COMPANY_SITE_URL = 'https://dewantech.com';
 
+/** Open-source repository (shown in the demo banner and footer). */
+export const REPO_URL = 'https://github.com/DewanTechUS/dewantech-todo';
+
 /**
  * Business details shown on the Privacy Policy, Terms and Support pages.
  * ─ Fill in every empty value ('') below. Empty values appear on the pages as highlighted placeholders.

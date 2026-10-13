@@ -1,0 +1,61 @@
+# Builds the no-server demo of DoNext and publishes it to GitHub Pages.
+# One-time setup: GitHub → Settings → Pages → Source: "GitHub Actions".
+# The demo is then live at https://<user>.github.io/<repo>/ and updates on every push to main.
+name: Live demo (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # The demo doesn't need the MongoDB test binary.
+      MONGOMS_DISABLE_POSTINSTALL: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Test the app
+        run: npm test -w client
+
+      - name: Build the demo
+        run: npm run build -w client
+        env:
+          VITE_DEMO: 'true'
+          # GitHub Pages serves the site under /<repo-name>/
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+
+      - name: Single-page app fallback (refreshing /lists etc.)
+        run: cp client/dist/index.html client/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

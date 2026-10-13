@@ -1,6 +1,10 @@
 # DoNext
 
-DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
+**The to-do list you can talk to.** DoNext is a mobile-friendly, offline-first, open-source task app by DewanTech™. It has voice input, shared lists and offline sync, and is packaged for iOS and Android.
+
+**▶ [Try the live demo](https://dewantechus.github.io/dewantech-todo/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite, installable PWA
 - **Backend:** Node.js, Express 5, TypeScript, Zod validation
@@ -13,6 +17,20 @@ DoNext is a mobile-friendly, offline-first to-do app by DewanTech.
 | [docs/HOSTINGER.md](docs/HOSTINGER.md) | **Step-by-step deployment on Hostinger** (Node.js Web App, settings and environment variables) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Putting the app on your DewanTech website (subdomain or `/todo/` sub-path), Docker, production checklist |
 | [docs/MOBILE.md](docs/MOBILE.md) | iOS/Android builds, microphone permissions, signing, App Store and Google Play submission requirements |
+
+## Two ways to run DoNext
+
+| | **Demo mode** (no server) | **Full mode** (with your server) |
+| --- | --- | --- |
+| Cost | Free: static files only | Free tiers work (MongoDB Atlas plus any Node.js host) |
+| Where data lives | In the visitor's browser (localStorage) | In your MongoDB database |
+| Accounts, voice, offline, shared lists | ✅ (shared lists between accounts in the same browser) | ✅ across all devices |
+| Email for invitations and password reset | Shown on screen instead | ✅ via SMTP |
+| Command | `npm run build:demo` | `npm run build`, then `npm start` |
+
+The **live demo** is built automatically from `main` by [.github/workflows/demo.yml](.github/workflows/demo.yml) and published to GitHub Pages. To publish your own copy, fork the repo and go to **Settings → Pages → Source: GitHub Actions**.
+
+To **run your own server** for real accounts and sync across devices, follow [MongoDB setup](#mongodb-setup) and [Local development](#local-development) below, then [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ---
 
@@ -169,7 +187,7 @@ Other useful commands:
 npm test
 ```
 
-There are 85 tests.
+There are 90 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.
@@ -183,7 +201,7 @@ There are 85 tests.
 - Password reset: emailed single-use links, only a hash stored, expiry, the same answer for unknown emails, and other devices signed out afterwards.
 - Changing name and password, and exporting only your own data.
 
-**Client: 42 tests.** Vitest, Testing Library, and fake IndexedDB.
+**Client: 47 tests.** Vitest, Testing Library, and fake IndexedDB.
 - Shared lists are kept for offline use, and tasks from lists you've left are removed.
 - The task form's List and Assign to fields.
 - Offline queueing and later push.

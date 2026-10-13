@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { IS_DEMO } from '../lib/api';
 import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, type LegalField } from '../lib/brand';
 
 /**
@@ -38,6 +39,14 @@ export function PrivacyPage() {
         Effective date: <V k="effectiveDate" label="EFFECTIVE DATE" /> · Last updated: <V k="lastUpdated" label="LAST UPDATED DATE" />
       </p>
       <DraftNotice />
+
+      {IS_DEMO && (
+        <div role="note" className="mb-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          <strong>About this live demo:</strong> it runs entirely in your browser. Accounts and tasks you create here are stored only in
+          this browser’s storage and are never sent to DewanTech or any server. Clearing your browser data deletes them. The policy below
+          describes the full version, which uses a server.
+        </div>
+      )}
 
       <p>
         This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”){address ? `, located at ${address},` : ""}

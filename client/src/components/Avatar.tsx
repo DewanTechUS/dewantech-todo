@@ -5,7 +5,8 @@ export function initials(name: string) {
   return (
     name
       .split(/\s+/)
-      .filter(Boolean)
+      // Only words that start with a letter, so "Alex (demo)" → "A", not "A(".
+      .filter((w) => /^\p{L}/u.test(w))
       .slice(0, 2)
       .map((w) => w[0]!.toUpperCase())
       .join('') || '?'
