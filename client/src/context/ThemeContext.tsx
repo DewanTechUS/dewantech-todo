@@ -1,3 +1,4 @@
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { KEYS, storage } from '../lib/storage';
 
@@ -30,6 +31,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', resolved === 'dark');
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0f172a' : '#012360');
+    // In the iOS/Android apps, keep status-bar icons readable on the header (white in light mode, dark in dark mode).
+    if (Capacitor.isNativePlatform()) {
+      void SystemBars.setStyle({ style: resolved === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => undefined);
+    }
   }, [resolved]);
 
   const setPref = (p: ThemePref) => {

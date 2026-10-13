@@ -17,6 +17,9 @@ function V({ k, label }: { k: LegalField; label: string }) {
 
 
 
+/** Optional: individuals don't have to publish a home address. */
+const address = LEGAL.businessAddress.trim();
+
 function DraftNotice() {
   if (!LEGAL_IS_DRAFT) return null;
   return (
@@ -37,7 +40,7 @@ export function PrivacyPage() {
       <DraftNotice />
 
       <p>
-        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”), located at <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" />,
+        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”){address ? `, located at ${address},` : ""}
         collects, uses and protects information when you use the DoNext web app and mobile apps (the “App”).
       </p>
 
@@ -154,7 +157,7 @@ export function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}, <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" /> · Email: <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />
+        {COMPANY_LEGAL_NAME}{address ? `, ${address}` : ""} · Email: <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />
       </p>
     </article>
   );
@@ -254,7 +257,7 @@ export function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}, <V k="businessAddress" label="REGISTERED BUSINESS ADDRESS" /> · Email: <V k="supportEmail" label="SUPPORT CONTACT EMAIL" />
+        {COMPANY_LEGAL_NAME}{address ? `, ${address}` : ""} · Email: <V k="supportEmail" label="SUPPORT CONTACT EMAIL" />
       </p>
     </article>
   );

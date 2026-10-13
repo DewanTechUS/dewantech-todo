@@ -18,7 +18,7 @@ export const COMPANY_SITE_URL = 'https://dewantech.com';
 export const LEGAL = {
   effectiveDate: '', // the day you go live, e.g. 'November 1, 2026'
   lastUpdated: '', // same as effectiveDate at first; change it whenever you edit the policies
-  businessAddress: '', // your registered business address (as on your LLC paperwork)
+  businessAddress: '', // OPTIONAL — business address, or leave empty (individuals don't need to publish one)
   supportEmail: 'support@dewantech.com',
   infoEmail: 'info@dewantech.com', // general information and licensing
   privacyEmail: 'support@dewantech.com', // use a dedicated privacy@ address here if you create one
@@ -39,6 +39,9 @@ export const LEGAL = {
 
 export type LegalField = Exclude<keyof typeof LEGAL, 'finalized'>;
 
+/** Details that may stay empty without keeping the pages in draft. */
+const OPTIONAL = new Set(['finalized', 'businessAddress']);
+
 /** True until every legal detail is filled in and the owner has marked the pages as final. */
 export const LEGAL_IS_DRAFT =
-  !LEGAL.finalized || Object.entries(LEGAL).some(([k, v]) => k !== 'finalized' && typeof v === 'string' && !v.trim());
+  !LEGAL.finalized || Object.entries(LEGAL).some(([k, v]) => !OPTIONAL.has(k) && typeof v === 'string' && !v.trim());

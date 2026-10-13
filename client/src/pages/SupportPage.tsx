@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Link } from 'react-router-dom';
 import { APP_NAME, COMPANY_LEGAL_NAME, LEGAL } from '../lib/brand';
 
-const faqs: { q: string; a: ReactNode }[] = [
+const faqs: { q: string; a: ReactNode; webOnly?: boolean }[] = [
   {
     q: 'How do I add a task by voice?',
     a: (
@@ -51,6 +52,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: 'How do I install it on my phone?',
+    webOnly: true,
     a: 'iPhone (Safari): tap Share → Add to Home Screen. Android (Chrome): tap ⋮ → Install app. It then opens like a regular app and works offline.',
   },
 ];
@@ -69,7 +71,7 @@ export default function SupportPage() {
           Frequently asked questions
         </h2>
         <div className="card divide-y divide-slate-100 dark:divide-slate-800">
-          {faqs.map(({ q, a }) => (
+          {faqs.filter((f) => !(f.webOnly && Capacitor.isNativePlatform())).map(({ q, a }) => (
             <details key={q} className="group">
               <summary className="flex min-h-[56px] cursor-pointer list-none items-center justify-between gap-4 px-5 font-medium [&::-webkit-details-marker]:hidden">
                 {q}

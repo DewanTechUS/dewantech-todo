@@ -2,7 +2,11 @@ import type { ComponentType, SVGProps } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLogo, CompanyLogo } from '../components/Brand';
 import { CheckIcon, CloudIcon, MicIcon, ShieldIcon } from '../components/Icons';
+import { Capacitor } from '@capacitor/core';
 import { APP_NAME, COPYRIGHT, SLOGAN } from '../lib/brand';
+
+/** Inside the iOS/Android app, browser-only tips (Add to Home Screen) don't apply. */
+const isNativeApp = Capacitor.isNativePlatform();
 
 const features: { title: string; text: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
   { title: 'Just say it', text: 'Tap the mic and talk — your words appear as you speak. Fix anything, then tap the arrow.', Icon: MicIcon },
@@ -54,11 +58,22 @@ export default function LandingPage() {
       </section>
 
       <section className="card flex flex-col items-center gap-4 bg-gradient-to-br from-brand-900 to-brand-700 p-8 text-center text-white dark:from-brand-900 dark:to-slate-900">
-        <h2 className="text-2xl font-bold">Install it like an app</h2>
-        <p className="max-w-lg text-brand-100">
-          On your phone, open {APP_NAME} in your browser and choose <strong>Add to Home Screen</strong> (iPhone: Share menu · Android: ⋮
-          menu). It opens full-screen and works offline.
-        </p>
+        {isNativeApp ? (
+          <>
+            <h2 className="text-2xl font-bold">Your tasks, everywhere</h2>
+            <p className="max-w-lg text-brand-100">
+              Sign in on your phone, tablet or computer — your tasks and shared lists stay in sync, even after working offline.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold">Install it like an app</h2>
+            <p className="max-w-lg text-brand-100">
+              On your phone, open {APP_NAME} in your browser and choose <strong>Add to Home Screen</strong> (iPhone: Share menu · Android:
+              ⋮ menu). It opens full-screen and works offline.
+            </p>
+          </>
+        )}
         <Link to="/signup" className="btn bg-white text-brand-900 hover:bg-brand-50">
           Create your free account
         </Link>

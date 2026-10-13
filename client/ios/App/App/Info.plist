@@ -68,5 +68,7 @@
 	<string>DoNext uses the microphone only when you tap the microphone button, so you can add tasks by speaking.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>DoNext converts your speech into task text when you use voice input. DoNext does not store audio.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

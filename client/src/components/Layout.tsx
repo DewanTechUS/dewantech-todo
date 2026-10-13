@@ -10,7 +10,7 @@ export function Layout() {
   const online = useOnlineStatus();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="safe-x flex min-h-screen flex-col">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:shadow dark:focus:bg-slate-800"
@@ -18,7 +18,7 @@ export function Layout() {
         Skip to content
       </a>
       <Header />
-      <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+      <main id="main" className="safe-pb-6 mx-auto w-full max-w-5xl flex-1 px-4 pt-6">
         {!online && status === 'authenticated' && (
           <Alert kind="warning" className="mb-4">
             You're offline. You can keep adding and editing tasks — they'll sync automatically when you reconnect.

@@ -32,6 +32,8 @@ export default {
       },
       animation: {
         wave: 'wave 0.9s ease-in-out infinite',
+        // Calmer than Tailwind's default 1s spin for loading indicators.
+        'spin-slow': 'spin 1.5s linear infinite',
       },
       minHeight: { touch: '44px' },
       minWidth: { touch: '44px' },

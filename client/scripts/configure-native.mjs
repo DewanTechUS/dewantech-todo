@@ -25,14 +25,17 @@ function configureIOS() {
   if (!existsSync(plist)) return console.log('• iOS project not found (run `npx cap add ios` on a Mac) — skipped');
   let xml = readFileSync(plist, 'utf8');
   let changed = false;
-  for (const [key, value] of Object.entries(IOS_KEYS)) {
-    if (xml.includes(`<key>${key}</key>`)) continue;
+  const add = (key, valueXml) => {
+    if (xml.includes(`<key>${key}</key>`)) return;
     // Insert before the closing </dict> of the root dictionary.
     const idx = xml.lastIndexOf('</dict>');
     if (idx === -1) throw new Error('Unexpected Info.plist format');
-    xml = `${xml.slice(0, idx)}\t<key>${key}</key>\n\t<string>${escapeXml(value)}</string>\n${xml.slice(idx)}`;
+    xml = `${xml.slice(0, idx)}\t<key>${key}</key>\n\t${valueXml}\n${xml.slice(idx)}`;
     changed = true;
-  }
+  };
+  for (const [key, value] of Object.entries(IOS_KEYS)) add(key, `<string>${escapeXml(value)}</string>`);
+  // DoNext only uses standard HTTPS (exempt encryption), so App Store Connect won't ask on every upload.
+  add('ITSAppUsesNonExemptEncryption', '<false/>');
   if (changed) writeFileSync(plist, xml);
   console.log(`✓ iOS Info.plist ${changed ? 'updated' : 'already configured'}`);
   addPrivacyManifest();
