@@ -169,3 +169,14 @@ export const MailIcon = (p: P) => (
     <path d="m3 7 9 6 9-6" />
   </svg>
 );
+export const CalendarIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2" />
+  </svg>
+);
+export const BellIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0" />
+  </svg>
+);

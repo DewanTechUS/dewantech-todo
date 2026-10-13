@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Alert } from '../components/Alert';
+import { CalendarDialog } from '../components/CalendarDialog';
 import { FilterBar } from '../components/FilterBar';
 import { MailIcon, PlusIcon, UsersIcon } from '../components/Icons';
 import { Modal } from '../components/Modal';
@@ -29,6 +30,7 @@ export default function TasksPage() {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
+  const [scheduling, setScheduling] = useState<Task | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const location = useLocation();
   const [passwordReset, setPasswordReset] = useState(() => Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset));
@@ -174,6 +176,7 @@ export default function TasksPage() {
                 assignee={person(list, task.assigneeId)}
                 onToggle={() => void run(() => store.toggle(task.id))}
                 onEdit={() => setEditing(task)}
+                onCalendar={() => setScheduling(task)}
                 onDelete={canDelete(task, user.id, listsById) ? () => setDeleting(task) : undefined}
               />
             );
@@ -215,6 +218,8 @@ export default function TasksPage() {
           />
         </Modal>
       )}
+
+      {scheduling && <CalendarDialog task={scheduling} onClose={() => setScheduling(null)} />}
 
       {deleting && (
         <Modal title="Delete task?" onClose={() => setDeleting(null)}>

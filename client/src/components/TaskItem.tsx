@@ -1,7 +1,7 @@
 import { formatDueDate, isOverdue } from '../lib/filters';
 import type { Task } from '../lib/types';
 import { Avatar } from './Avatar';
-import { CheckIcon, EditIcon, TrashIcon, UsersIcon } from './Icons';
+import { CalendarIcon, CheckIcon, EditIcon, TrashIcon, UsersIcon } from './Icons';
 
 interface Person {
   id: string;
@@ -25,6 +25,8 @@ interface TaskItemProps {
   meId?: string;
   onToggle: () => void;
   onEdit: () => void;
+  /** Opens "Add to calendar" (reminder). */
+  onCalendar?: () => void;
   /** Omit when I'm not allowed to delete this task. */
   onDelete?: () => void;
 }
@@ -32,7 +34,7 @@ interface TaskItemProps {
 const chip = 'inline-flex items-center gap-1 rounded-full px-2 py-1';
 const personChip = 'inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-0.5 pr-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
 
-export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, onEdit, onDelete }: TaskItemProps) {
+export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, onEdit, onCalendar, onDelete }: TaskItemProps) {
   const overdue = isOverdue(task);
   return (
     <li className="card flex items-start gap-3 p-3 sm:p-4">
@@ -109,6 +111,11 @@ export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, on
       </div>
 
       <div className="flex shrink-0 gap-1">
+        {onCalendar && !task.completed && (
+          <button type="button" onClick={onCalendar} className="btn-ghost" aria-label={`Add “${task.title}” to calendar`} title="Add to calendar">
+            <CalendarIcon />
+          </button>
+        )}
         <button type="button" onClick={onEdit} className="btn-ghost" aria-label={`Edit “${task.title}”`}>
           <EditIcon />
         </button>
