@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import type { Config } from '../config.js';
 import { pendingInvites, toListDTOs } from '../lib/access.js';
 import { HttpError } from '../lib/errors.js';
-import { listInviteEmail, type Mailer } from '../lib/mailer.js';
+import { listInviteEmail, listJoinedEmail, type Mailer } from '../lib/mailer.js';
 import { createListSchema, inviteSchema, renameListSchema } from '../lib/validation.js';
 import { requireAuth } from '../middleware/auth.js';
 import { parse } from '../middleware/validate.js';
@@ -108,10 +108,15 @@ export function listsRouter(config: Config, opts: { mailer: Mailer }): Router {
       { _id: list._id },
       { $push: { invites: { email, invitedBy: inviter._id, createdAt: now } }, $set: { updatedAt: now } },
     );
-    opts.mailer
-      .send({ to: email, ...listInviteEmail(inviter.name, list.name, config.APP_URL) })
-      .catch((err) => console.error('Failed to send list invitation email:', err));
-    res.status(201).json(await respond(list._id, req.userId!));
+    // Tell the inviter whether the email really went out (no email service = in-app invitation only).
+    const emailSent = await opts.mailer.send({ to: email, ...listInviteEmail(inviter.name, list.name, config.APP_URL) }).then(
+      () => opts.mailer.enabled,
+      (err) => {
+        console.error('Failed to send list invitation email:', err);
+        return false;
+      },
+    );
+    res.status(201).json({ ...(await respond(list._id, req.userId!)), emailSent });
   });
 
   router.delete('/:id/invites/:email', async (req, res) => {
@@ -137,6 +142,13 @@ export function listsRouter(config: Config, opts: { mailer: Mailer }): Router {
       { new: true },
     ).lean<ListAttrs>();
     if (!updated) throw new HttpError(404, 'This invitation is no longer available.');
+    // Let the owner know their invitation was accepted.
+    const owner = await User.findById(updated.owner).select('email').lean();
+    if (owner) {
+      opts.mailer
+        .send({ to: owner.email, ...listJoinedEmail(user.name, updated.name, config.APP_URL) })
+        .catch((err) => console.error('Failed to send list joined email:', err));
+    }
     res.json(await respond(updated._id, req.userId!));
   });
 

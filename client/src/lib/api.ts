@@ -78,7 +78,7 @@ const realApi = {
       apiFetch<{ list: SharedList }>(`/api/lists/${id}`, { method: 'PATCH', token, body: { name } }),
     remove: (token: string, id: string) => apiFetch<void>(`/api/lists/${id}`, { method: 'DELETE', token }),
     invite: (token: string, id: string, email: string) =>
-      apiFetch<{ list: SharedList }>(`/api/lists/${id}/invites`, { method: 'POST', token, body: { email } }),
+      apiFetch<{ list: SharedList; emailSent?: boolean }>(`/api/lists/${id}/invites`, { method: 'POST', token, body: { email } }),
     cancelInvite: (token: string, id: string, email: string) =>
       apiFetch<{ list: SharedList }>(`/api/lists/${id}/invites/${encodeURIComponent(email)}`, { method: 'DELETE', token }),
     accept: (token: string, id: string) => apiFetch<{ list: SharedList }>(`/api/lists/${id}/accept`, { method: 'POST', token }),

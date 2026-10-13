@@ -1,4 +1,5 @@
 import { useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useDialog } from '../hooks/useDialog';
 import { CloseIcon } from './Icons';
 
@@ -14,7 +15,8 @@ export function Modal({ title, onClose, children }: ModalProps) {
   const panel = useRef<HTMLDivElement>(null);
   useDialog(panel, onClose, 'input, textarea, select, button:not([data-close])');
 
-  return (
+  // Rendered at the end of <body> so a dialog opened from inside another one sits on top of it.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-slate-900/60" onClick={onClose} aria-hidden />
       <div
@@ -35,6 +37,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

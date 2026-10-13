@@ -58,6 +58,7 @@ describe('shared lists', () => {
     const invite = await api(owner).post(`/api/lists/${listId}/invites`, { email: sara.email.toUpperCase() });
     expect(invite.status).toBe(201);
     expect(invite.body.list.invites).toEqual([expect.objectContaining({ email: sara.email })]);
+    expect(invite.body.emailSent).toBe(true);
     await new Promise((r) => setTimeout(r, 20));
     expect(sentMail.at(-1)).toMatchObject({ to: sara.email, subject: expect.stringContaining('Rocky invited you to “Family”') });
 
@@ -68,6 +69,8 @@ describe('shared lists', () => {
     const accepted = await api(sara).post(`/api/lists/${listId}/accept`);
     expect(accepted.body.list).toMatchObject({ role: 'member', invites: [] });
     expect(accepted.body.list.members.map((m: { name: string }) => m.name)).toEqual(['Rocky', 'Sara']);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(sentMail.at(-1)).toMatchObject({ to: owner.email, subject: 'Sara joined “Family” on DoNext' });
     expect((await api(sara).post(`/api/lists/${listId}/accept`)).status).toBe(404); // already used
   });
 
@@ -231,5 +234,19 @@ describe('shared lists and sync', () => {
     expect(String(kept?.user)).toBe(owner.user.id);
     const list = (await api(owner).get('/api/lists')).body.lists[0];
     expect(list.members.map((m: { name: string }) => m.name)).toEqual(['Rocky']);
+  });
+});
+
+describe('invitations without an email service', () => {
+  it('still invites in the app, and says the email was not sent', async () => {
+    const { createApp } = await import('../src/app.js');
+    const { testConfig } = await import('./helpers.js');
+    const quiet = createApp(testConfig, { authRateLimit: 1000, mailer: { enabled: false, send: async () => {} } });
+    const owner = await signup(quiet, { name: 'Rocky' });
+    const auth = { Authorization: `Bearer ${owner.token}` };
+    const { body } = await request(quiet).post('/api/lists').set(auth).send({ name: 'Team' });
+    const res = await request(quiet).post(`/api/lists/${body.list.id}/invites`).set(auth).send({ email: 'pat@example.com' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ emailSent: false, list: { invites: [expect.objectContaining({ email: 'pat@example.com' })] } });
   });
 });

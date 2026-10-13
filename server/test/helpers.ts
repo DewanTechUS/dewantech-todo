@@ -27,7 +27,7 @@ export function useTestApp(): { app: () => Express } {
     mongo = await MongoMemoryServer.create();
     await mongoose.connect(mongo.getUri());
     await mongoose.connection.syncIndexes();
-    app = createApp(testConfig, { authRateLimit: 1000, mailer: { send: async (m) => void sentMail.push(m) } });
+    app = createApp(testConfig, { authRateLimit: 1000, mailer: { enabled: true, send: async (m) => void sentMail.push(m) } });
   });
 
   afterEach(async () => {

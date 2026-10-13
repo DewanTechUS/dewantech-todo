@@ -46,7 +46,7 @@ SERVE_CLIENT=true
 TRUST_PROXY=1                            # behind Nginx / a PaaS load balancer
 CORS_ORIGINS=capacitor://localhost,https://localhost   # only needed for the mobile apps
 APP_URL=https://donext.dewantech.com     # used in password reset emails
-# SMTP settings: see "Password reset emails" below
+# SMTP settings: see "Emails" below (free with Gmail)
 ```
 
 Start it with `npm start`, which runs `node server/dist/index.js`.
@@ -188,9 +188,36 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 
 ---
 
-## Password reset emails (SMTP)
+## Emails: password resets and shared-list invitations (SMTP)
 
-DoNext emails a reset link when someone taps **Forgot password?**. To deliver those emails, the server needs an SMTP account. *You sign up for this with your own account.* Any provider works, for example:
+DoNext sends these emails:
+
+- a reset link when someone taps **Forgot password?**
+- an invitation when someone is invited to a shared list
+- a confirmation to the list owner when the invited person joins
+
+To deliver them, the server needs an SMTP account. *You sign up for this with your own account.* Without one, invitations still work inside the app: the invited person sees them after logging in, and the inviter is told that email notifications are coming soon.
+
+### Free option: Gmail
+
+A regular Gmail account can send a few hundred emails a day for free, which is plenty for a personal or portfolio app.
+
+1. Turn on **2-Step Verification** for the Google account (myaccount.google.com → Security).
+2. Create an **App password**: myaccount.google.com/apppasswords → name it "DoNext" → copy the 16-character password.
+3. Set these on the server, and never commit them:
+   ```ini
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_SECURE=true
+   SMTP_USER=you@gmail.com
+   SMTP_PASS=the-16-character-app-password
+   MAIL_FROM=DoNext <you@gmail.com>
+   ```
+4. Restart the server and invite yourself (another address) to a list. The app should say **"Invitation emailed to …"**.
+
+Gmail sends from your Gmail address. To send from a dewantech.com address, use one of the providers below. Brevo and Resend also have free plans.
+
+### Other providers
 
 - **Amazon SES:** very cheap, requires verifying your domain.
 - **Postmark** or **SendGrid:** quick to set up, with free or low-cost tiers.

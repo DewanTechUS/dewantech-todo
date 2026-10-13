@@ -197,3 +197,13 @@ export const FlagIcon = (p: P) => (
     <path d="M4 22V4M4 4h12l-2 4 2 4H4" />
   </svg>
 );
+export const SparkleIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 3l1.8 4.9L19 9.7l-5.2 1.8L12 16.4l-1.8-4.9L5 9.7l5.2-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />
+  </svg>
+);
+export const HourglassIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4" />
+  </svg>
+);

@@ -1,6 +1,8 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { PRIORITIES, type Priority, type SharedList, type TaskFields } from '../lib/types';
 import { Alert } from './Alert';
+import { DueDateField } from './DueDatePicker';
+import { SmartSuggestions } from './SmartSuggestions';
 import { Spinner } from './Spinner';
 import { SubtaskEditor } from './SubtaskEditor';
 import { VoiceInput } from './VoiceInput';
@@ -70,7 +72,6 @@ export function TaskForm({
     title: `${id}-title`,
     description: `${id}-description`,
     dueDate: `${id}-due`,
-    dueTime: `${id}-time`,
     priority: `${id}-priority`,
     category: `${id}-category`,
     categories: `${id}-categories`,
@@ -223,50 +224,17 @@ export function TaskForm({
         )}
       </div>
 
+      <DueDateField
+        id={ids.dueDate}
+        date={fields.dueDate}
+        time={fields.dueTime}
+        onChange={({ date, time }) => {
+          setFields((f) => ({ ...f, dueDate: date, dueTime: time }));
+          setErrors((er) => ({ ...er, dueDate: undefined, dueTime: undefined }));
+        }}
+      />
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor={ids.dueDate} className="label">
-            Due date
-          </label>
-          <input
-            id={ids.dueDate}
-            type="date"
-            className="input"
-            value={fields.dueDate ?? ''}
-            onChange={(e) => {
-              const dueDate = e.target.value || null;
-              // A time only makes sense with a date.
-              setFields((f) => ({ ...f, dueDate, dueTime: dueDate ? f.dueTime : null }));
-              if (errors.dueDate) setErrors((er) => ({ ...er, dueDate: undefined }));
-            }}
-            {...errProps('dueDate')}
-          />
-          {errors.dueDate && (
-            <p id={`${id}-dueDate-error`} className="field-error">
-              {errors.dueDate}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor={ids.dueTime} className="label">
-            Time <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
-          </label>
-          <input
-            id={ids.dueTime}
-            type="time"
-            className="input disabled:opacity-50"
-            value={fields.dueTime ?? ''}
-            onChange={(e) => set('dueTime', e.target.value || null)}
-            disabled={!fields.dueDate}
-            title={fields.dueDate ? undefined : 'Pick a due date first'}
-            {...errProps('dueTime')}
-          />
-          {errors.dueTime && (
-            <p id={`${id}-dueTime-error`} className="field-error">
-              {errors.dueTime}
-            </p>
-          )}
-        </div>
         <div>
           <label htmlFor={ids.priority} className="label">
             Priority
@@ -320,6 +288,18 @@ export function TaskForm({
       {formError && <Alert onDismiss={() => setFormError(null)}>{formError}</Alert>}
 
       {titleField}
+
+      {voice && (
+        <SmartSuggestions
+          fields={fields}
+          categories={categories}
+          onApply={(patch) => {
+            setFields((f) => ({ ...f, ...patch }));
+            setErrors({});
+            setShowDetails(true); // show what was filled in
+          }}
+        />
+      )}
 
       {listFields}
 

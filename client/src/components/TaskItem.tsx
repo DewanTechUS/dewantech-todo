@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { formatDueDate, formatTime, formatTimestamp, isOverdue, todayISO } from '../lib/filters';
+import { formatDueDate, formatTime, formatTimestamp, isOverdue, nowTime, timeLeft, todayISO } from '../lib/filters';
+import { useNow } from '../hooks/useNow';
 import type { Task } from '../lib/types';
 import { Avatar } from './Avatar';
-import { CalendarIcon, CheckIcon, ClockIcon, EditIcon, FlagIcon, TagIcon, TrashIcon, UsersIcon } from './Icons';
+import { CalendarIcon, CheckIcon, ClockIcon, HourglassIcon, EditIcon, FlagIcon, TagIcon, TrashIcon, UsersIcon } from './Icons';
 
 interface Person {
   id: string;
@@ -13,6 +14,12 @@ const priorityStyle = {
   high: { stripe: 'bg-red-500', text: 'text-red-700 dark:text-red-300', label: 'High' },
   medium: { stripe: 'bg-amber-400', text: 'text-amber-700 dark:text-amber-300', label: 'Medium' },
   low: { stripe: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300', label: 'Low' },
+};
+
+const LEFT_STYLE = {
+  overdue: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-200',
+  soon: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200',
+  later: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
 };
 
 /** Sub-items shown before "Show more". */
@@ -42,8 +49,10 @@ const personChip = 'inline-flex items-center gap-1 rounded-full bg-slate-100 py-
 
 export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, onToggleSubtask, onEdit, onCalendar, onDelete }: TaskItemProps) {
   const [expanded, setExpanded] = useState(false);
-  const overdue = isOverdue(task);
-  const dueToday = task.dueDate === todayISO();
+  const now = useNow(!!task.dueDate && !task.completed);
+  const overdue = isOverdue(task, todayISO(now), nowTime(now));
+  const left = timeLeft(task, now);
+  const dueToday = task.dueDate === todayISO(now);
   const p = priorityStyle[task.priority];
   const subtasks = task.subtasks ?? [];
   const doneCount = subtasks.filter((s) => s.done).length;
@@ -94,7 +103,7 @@ export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, on
               }`}
             >
               <CalendarIcon width={14} height={14} />
-              {overdue ? 'Overdue · ' : <span className="sr-only">Due </span>}
+              <span className="sr-only">Due </span>
               <time dateTime={task.dueTime ? `${task.dueDate}T${task.dueTime}` : task.dueDate}>
                 {formatDueDate(task.dueDate)}
               </time>
@@ -104,6 +113,12 @@ export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, on
                   {formatTime(task.dueTime)}
                 </>
               )}
+            </span>
+          )}
+          {left && (
+            <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 ${LEFT_STYLE[left.tone]}`}>
+              <HourglassIcon width={12} height={12} />
+              {left.text}
             </span>
           )}
           <span className={`${meta} ${task.completed ? '' : p.text}`}>

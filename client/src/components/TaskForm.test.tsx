@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { todayISO } from '../lib/filters';
 import type { SpeechService } from '../lib/speech';
 import { TaskForm, validateTask, emptyFields } from './TaskForm';
 
@@ -25,10 +26,11 @@ describe('TaskForm', () => {
     render(<TaskForm categories={['Work']} submitLabel="Add task" onSubmit={onSubmit} />);
     await user.type(screen.getByLabelText(/title/i), 'Ship release');
     await user.type(screen.getByLabelText(/description/i), 'v1.0');
-    await user.type(screen.getByLabelText(/due date/i), '2026-12-24');
     await user.selectOptions(screen.getByLabelText(/priority/i), 'high');
     await user.type(screen.getByLabelText(/category/i), 'Work');
-    await user.type(screen.getByLabelText(/^time/i), '17:30');
+    await user.type(screen.getByLabelText('Due date'), 'tomorrow 5:30 pm');
+    expect(screen.getByText(/→ .*5:30 PM · 1 day left/)).toBeInTheDocument();
+    await user.tab();
     await user.type(screen.getByLabelText('New sub-item'), 'Write notes{Enter}');
     await user.type(screen.getByLabelText('New sub-item'), 'Tag build');
     await user.click(screen.getByRole('button', { name: /^add$/i }));
@@ -37,7 +39,7 @@ describe('TaskForm', () => {
     expect(onSubmit).toHaveBeenCalledWith({
       title: 'Ship release',
       description: 'v1.0',
-      dueDate: '2026-12-24',
+      dueDate: todayISO(new Date(Date.now() + 864e5)),
       dueTime: '17:30',
       priority: 'high',
       category: 'Work',
@@ -94,6 +96,30 @@ describe('TaskForm', () => {
     render(<TaskForm voice speech={noSpeech} categories={[]} submitLabel="Add" onSubmit={vi.fn()} />);
     expect(screen.getByText(/voice isn't available/i)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Task' })).toBeEnabled();
+  });
+
+  it('suggests a category and sub-items from the title and applies them', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<TaskForm voice speech={noSpeech} categories={[]} submitLabel="Add" onSubmit={onSubmit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Task' }), 'milk eggs and bread');
+    const card = screen.getByRole('region', { name: 'Suggestions' });
+    expect(card).toHaveTextContent('Groceries');
+    expect(card).toHaveTextContent('Milk, Eggs, Bread');
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    expect(screen.queryByRole('region', { name: 'Suggestions' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Add task' }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Buy groceries',
+        category: 'Groceries',
+        subtasks: [
+          { id: expect.any(String), title: 'Milk', done: false },
+          { id: expect.any(String), title: 'Eggs', done: false },
+          { id: expect.any(String), title: 'Bread', done: false },
+        ],
+      }),
+    );
   });
 
   it('validates lengths', () => {

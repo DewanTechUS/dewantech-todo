@@ -357,7 +357,8 @@ export function createDemoApi(): Api {
           if (list.invites.some((i) => i.email === clean)) throw new ApiError(409, 'That person has already been invited.');
           list.invites.push({ email: clean, invitedBy: user.id, createdAt: now() });
           list.updatedAt = now();
-          return { list: listDTO(db, list, user.id) };
+          // The demo has no server, so no email is sent.
+          return { list: listDTO(db, list, user.id), emailSent: false };
         }),
       cancelInvite: (token, id, email) =>
         tx((db) => {

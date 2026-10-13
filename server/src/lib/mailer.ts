@@ -9,6 +9,8 @@ export interface Mail {
 }
 
 export interface Mailer {
+  /** False when no email service is set up (emails are only logged). */
+  enabled: boolean;
   send: (mail: Mail) => Promise<void>;
 }
 
@@ -23,6 +25,7 @@ export function createMailer(config: Config): Mailer {
       console.warn('WARNING: SMTP_HOST is not set — password reset emails will NOT be delivered.');
     }
     return {
+      enabled: false,
       async send(mail) {
         if (config.NODE_ENV === 'production') {
           // Never write email bodies (e.g. reset links) to production logs.
@@ -41,6 +44,7 @@ export function createMailer(config: Config): Mailer {
     auth: config.SMTP_USER ? { user: config.SMTP_USER, pass: config.SMTP_PASS } : undefined,
   });
   return {
+    enabled: true,
     async send(mail) {
       await transport.sendMail({ from: config.MAIL_FROM, ...mail });
     },
@@ -65,6 +69,25 @@ export function listInviteEmail(inviterName: string, listName: string, appUrl: s
     <p><strong>${escapeHtml(inviterName)}</strong> invited you to <strong>“${escapeHtml(listName)}”</strong> on DoNext.</p>
     <p style="margin:24px 0"><a href="${escapeHtml(appUrl)}/lists" style="background:#006fef;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600;display:inline-block">Open DoNext</a></p>
     <p style="font-size:14px;color:#475569">Log in — or sign up with this email address — and accept the invitation on the Shared lists page.</p>
+    <p style="font-size:12px;color:#94a3b8;margin-top:24px">DoNext by DewanTech™ · Technology Built with Purpose.</p>
+  </div></body></html>`;
+  return { subject, text, html };
+}
+
+export function listJoinedEmail(memberName: string, listName: string, appUrl: string): Omit<Mail, 'to'> {
+  const subject = `${memberName} joined “${listName}” on DoNext`;
+  const text = [
+    `${memberName} accepted your invitation and joined the shared list “${listName}”.`,
+    '',
+    `Open your lists: ${appUrl}/lists`,
+    '',
+    '— DoNext by DewanTech™',
+  ].join('\n');
+  const html = `<!doctype html><html><body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f8fafc;padding:24px;color:#0f172a">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:28px;border:1px solid #e2e8f0">
+    <h1 style="margin:0 0 12px;font-size:20px;color:#012360">Invitation accepted</h1>
+    <p><strong>${escapeHtml(memberName)}</strong> joined your shared list <strong>“${escapeHtml(listName)}”</strong>.</p>
+    <p style="margin:24px 0"><a href="${escapeHtml(appUrl)}/lists" style="background:#006fef;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:600;display:inline-block">Open DoNext</a></p>
     <p style="font-size:12px;color:#94a3b8;margin-top:24px">DoNext by DewanTech™ · Technology Built with Purpose.</p>
   </div></body></html>`;
   return { subject, text, html };

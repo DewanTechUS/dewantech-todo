@@ -8,7 +8,7 @@ import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { api } from '../lib/api';
+import { api, IS_DEMO } from '../lib/api';
 import type { SharedList } from '../lib/types';
 
 type Message = { kind: 'success' | 'error'; text: string } | null;
@@ -27,13 +27,13 @@ export default function ListsPage() {
   if (!token || !user || !store) return null;
 
   /** Runs a list action online, then syncs so lists and tasks update everywhere. */
-  const act = async (key: string, fn: () => Promise<unknown>, success?: string) => {
+  const act = async <T,>(key: string, fn: () => Promise<T>, success?: string | ((result: T) => string)) => {
     setBusy(key);
     setMessage(null);
     try {
-      await fn();
+      const result = await fn();
       await store.syncNow();
-      if (success) setMessage({ kind: 'success', text: success });
+      if (success) setMessage({ kind: 'success', text: typeof success === 'function' ? success(result) : success });
       return true;
     } catch (err) {
       setMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Something went wrong. Please try again.' });
@@ -193,7 +193,7 @@ interface ListCardProps {
   disabled: boolean;
   busy: string | null;
   token: string;
-  act: (key: string, fn: () => Promise<unknown>, success?: string) => Promise<boolean>;
+  act: <T>(key: string, fn: () => Promise<T>, success?: string | ((result: T) => string)) => Promise<boolean>;
   onDelete: () => void;
   onLeave: () => void;
 }
@@ -209,7 +209,12 @@ function ListCard({ list, meId, taskCount, disabled, busy, token, act, onDelete,
   const onInvite = async (e: FormEvent) => {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return;
-    const ok = await act(`inv-${list.id}`, () => api.lists.invite(token, list.id, email.trim()), `Invitation sent to ${email.trim()}.`);
+    const to = email.trim();
+    const ok = await act(`inv-${list.id}`, () => api.lists.invite(token, list.id, to), (r) =>
+      r.emailSent
+        ? `Invitation emailed to ${to}. They can accept it after logging in.`
+        : `${to} is invited. They'll see the invitation when they log in or sign up with that email. Email notifications are coming soon.`,
+    );
     if (ok) setEmail('');
   };
 
@@ -307,6 +312,9 @@ function ListCard({ list, meId, taskCount, disabled, busy, token, act, onDelete,
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {IS_DEMO && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Email invitations are coming soon to the demo. For now, invites stay in this browser.</p>
+            )}
           </div>
           <button type="submit" className="btn-secondary" disabled={disabled || !/^\S+@\S+\.\S+$/.test(email.trim())}>
             {busy === `inv-${list.id}` ? <Spinner className="h-4 w-4" /> : <MailIcon />} Send invite

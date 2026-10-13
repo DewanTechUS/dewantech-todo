@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoriesOf, defaultFilters, filterTasks, formatDueDate, isOverdue } from './filters';
+import { categoriesOf, defaultFilters, filterTasks, formatDueDate, isOverdue, timeLeft } from './filters';
 import type { Task } from './types';
 
 let n = 0;
@@ -80,6 +80,24 @@ describe('date helpers', () => {
 
     const groceries = task({ title: 'Groceries', subtasks: [{ id: 'a', title: 'Oat milk', done: false }] });
     expect(filterTasks([groceries, late], { ...defaultFilters, query: 'oat' })).toEqual([groceries]);
+  });
+
+  it('says how much time is left', () => {
+    const now = new Date(2026, 9, 13, 10, 0); // Oct 13, 10:00
+    const left = (dueDate: string | null, dueTime: string | null = null, completed = false) =>
+      timeLeft({ dueDate, dueTime, completed }, now);
+    expect(left(null)).toBeNull();
+    expect(left('2026-10-20', null, true)).toBeNull();
+    expect(left('2026-10-13')).toEqual({ text: 'Due today', tone: 'soon' });
+    expect(left('2026-10-14')).toEqual({ text: '1 day left', tone: 'soon' });
+    expect(left('2026-10-20')).toEqual({ text: '7 days left', tone: 'later' });
+    expect(left('2026-10-11')).toEqual({ text: '2 days overdue', tone: 'overdue' });
+    expect(left('2026-10-13', '10:45')).toEqual({ text: '45 mins left', tone: 'soon' });
+    expect(left('2026-10-13', '15:00')).toEqual({ text: '5 hours left', tone: 'soon' });
+    expect(left('2026-10-14', '09:00')).toEqual({ text: '23 hours left', tone: 'soon' });
+    expect(left('2026-10-16', '09:00')).toEqual({ text: '3 days left', tone: 'later' });
+    expect(left('2026-10-13', '09:00')).toEqual({ text: '1 hour overdue', tone: 'overdue' });
+    expect(left('2026-10-13', '09:59')).toEqual({ text: '1 min overdue', tone: 'overdue' });
   });
 
   it('formats today and tomorrow in words', () => {

@@ -37,6 +37,46 @@ export function isOverdue(
   return task.dueDate < today || (task.dueDate === today && !!task.dueTime && task.dueTime <= time);
 }
 
+export type TimeLeftTone = 'overdue' | 'soon' | 'later';
+
+const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? '' : 's'}`;
+
+/** Whole calendar days from `from` to `to` (both YYYY-MM-DD). */
+function dayDiff(from: string, to: string) {
+  const [a, b] = [from, to].map((s) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  });
+  return Math.round((b - a) / 86_400_000);
+}
+
+/**
+ * How long until a task is due: "3 days left", "5 hours left", "Due today", "2 days overdue"…
+ * Tasks without a time count as due at the end of their day. Null when done or undated.
+ */
+export function timeLeft(
+  task: Pick<Task, 'dueDate' | 'completed'> & { dueTime?: string | null },
+  now = new Date(),
+): { text: string; tone: TimeLeftTone } | null {
+  if (task.completed || !task.dueDate) return null;
+  const days = dayDiff(todayISO(now), task.dueDate);
+
+  if (!task.dueTime) {
+    if (days === 0) return { text: 'Due today', tone: 'soon' };
+    if (days > 0) return { text: `${plural(days, 'day')} left`, tone: days === 1 ? 'soon' : 'later' };
+    return { text: `${plural(-days, 'day')} overdue`, tone: 'overdue' };
+  }
+
+  const [y, mo, d] = task.dueDate.split('-').map(Number);
+  const [h, mi] = task.dueTime.split(':').map(Number);
+  const mins = Math.round((new Date(y, mo - 1, d, h, mi).getTime() - now.getTime()) / 60_000);
+  const abs = Math.abs(mins);
+  const amount =
+    abs < 60 ? plural(Math.max(abs, 1), 'min') : abs < 24 * 60 ? plural(Math.round(abs / 60), 'hour') : plural(Math.abs(days) || 1, 'day');
+  if (mins < 0) return { text: `${amount} overdue`, tone: 'overdue' };
+  return { text: `${amount} left`, tone: mins < 24 * 60 ? 'soon' : 'later' };
+}
+
 /** "15:30" → "3:30 PM" (in the user's locale). */
 export function formatTime(hhmm: string): string {
   const [h, m] = hhmm.split(':').map(Number);

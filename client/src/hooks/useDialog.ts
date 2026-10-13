@@ -2,12 +2,17 @@ import { useEffect, type RefObject } from 'react';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])';
 
+/** Open dialogs, innermost last. Only the top one handles Escape and Tab (a picker can open over a form). */
+const stack: object[] = [];
+
 /**
  * Shared behaviour for modal surfaces (dialogs, the mobile menu): moves focus inside,
  * traps Tab, closes on Escape, locks page scroll, and restores focus on close.
  */
 export function useDialog(panel: RefObject<HTMLElement>, onClose: () => void, initialFocus?: string) {
   useEffect(() => {
+    const token = {};
+    stack.push(token);
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const first = initialFocus ? panel.current?.querySelector<HTMLElement>(initialFocus) : null;
     (first ?? panel.current)?.focus();
@@ -15,6 +20,7 @@ export function useDialog(panel: RefObject<HTMLElement>, onClose: () => void, in
     document.body.style.overflow = 'hidden';
 
     const onKey = (e: KeyboardEvent) => {
+      if (stack[stack.length - 1] !== token) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         onClose();
@@ -35,6 +41,7 @@ export function useDialog(panel: RefObject<HTMLElement>, onClose: () => void, in
     };
     document.addEventListener('keydown', onKey);
     return () => {
+      stack.splice(stack.indexOf(token), 1);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
       previouslyFocused?.focus?.();

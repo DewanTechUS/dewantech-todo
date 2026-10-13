@@ -39,8 +39,12 @@ To **run your own server** for real accounts and sync across devices, follow [Mo
 - **Accounts:** sign up, log in, log out, log out of all devices, forgot/reset password by email, edit your name, change your password, download all your data as JSON, and delete your account (asks for your password again).
 - **Public pages:** a landing page for visitors, Help & Support (FAQ and contact), Privacy Policy and Terms.
 - **Reliability:** if something crashes, a friendly recovery screen appears instead of a blank page.
-- **Tasks:** create, edit, complete, and delete tasks. Each task has a title, description, due date, priority (low/medium/high), and category.
-- **Finding tasks:** search across title, description, and category. Filter by status, priority, or category, and sort by due date, priority, or newest. Overdue tasks are highlighted.
+- **Tasks:** create, edit, complete, and delete tasks. Each task has a title, description, due date and optional time, priority (low/medium/high), category, and a checklist of **sub-items** you can tick off right on the card.
+- **Smart suggestions:** as you type or speak a new task, DoNext suggests the details, and **Apply** fills them in:
+  - "milk eggs and bread" → *Buy groceries*, category Groceries, with sub-items Milk, Eggs and Bread.
+  - "pay electricity bill tomorrow 5pm urgent" → *Pay electricity bill*, category Bills, priority High, due tomorrow at 5:00 PM.
+  - It also offers ready-made checklists for trips, cleaning, parties and more, and reuses your own category names. It runs on your device with built-in rules: no AI service, no API key, no cost, and nothing you type leaves the device. It works offline too. The rules are in [`client/src/lib/smartSuggest.ts`](client/src/lib/smartSuggest.ts) and are easy to extend.
+- **Finding tasks:** search across title, description, category, and sub-items. Filter by status, priority, or category, and sort by due date, priority, or newest. Overdue tasks are highlighted.
 - **Shared lists (collaboration):**
   - Create a list such as "Family" or "Team" and invite people by email. They get an email, and see the invitation when they log in or after they sign up with that address.
   - Everyone in a list sees and edits its tasks on all their devices, and tasks can be assigned to a list member.
@@ -188,7 +192,7 @@ Other useful commands:
 npm test
 ```
 
-There are 105 tests.
+There are 130 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.
