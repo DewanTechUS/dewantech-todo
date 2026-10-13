@@ -5,6 +5,30 @@
 **▶ [Try the live demo](https://dewantechus.github.io/donext/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Tests](https://img.shields.io/badge/tests-137%20passing-22c55e)
+![PWA](https://img.shields.io/badge/PWA-offline%20ready-5a0fc8)
+
+<p>
+  <img src="docs/screenshots/phone-tasks.png" alt="Task list with due dates, time left, priorities and a sub-item checklist" width="24%">
+  <img src="docs/screenshots/phone-suggest.png" alt="Smart suggestions filling in category, due date and sub-items from “milk eggs and bread tomorrow 6pm”" width="24%">
+  <img src="docs/screenshots/phone-picker.png" alt="Due date picker with quick picks, a month calendar and times" width="24%">
+  <img src="docs/screenshots/phone-dark-reminder.png" alt="Dark mode with a reminder card offering Mark done and Snooze" width="24%">
+</p>
+
+<img src="docs/screenshots/desktop.png" alt="DoNext on a desktop browser" width="100%">
+
+## Highlights
+
+- **Offline-first sync engine:** every change is saved to IndexedDB and queued in an outbox, then synced with last-write-wins conflict resolution and deletion tombstones. The app works fully without a connection.
+- **Understands plain language, on the device:** type or say *"milk eggs and bread tomorrow 6pm"* and it suggests *Buy groceries*, the Groceries category, a due date and time, and Milk, Eggs and Bread as sub-items. It's rule-based, with no AI service or API costs.
+- **Voice input and spoken reminders:** speech-to-text with permission handling, and reminders that play a synthesised sound (Web Audio) and can be read aloud (Speech Synthesis).
+- **Collaboration:** shared lists with email invitations and assignees. Access rules are enforced on the server and covered by tests.
+- **Security:** bcrypt, revocable JWTs, strict Zod schemas that block NoSQL injection, Helmet CSP and rate limiting.
+- **Polish:** accessible (labelled controls, focus-trapped dialogs, `aria-live`), dark mode, installable PWA, and Capacitor iOS and Android projects.
+- **Quality:** 137 automated tests (Vitest, Supertest, Testing Library). GitHub Actions tests and deploys the live demo on every push.
+
+## Tech stack
 
 - **Frontend:** React 18, TypeScript, Tailwind CSS, Vite, installable PWA
 - **Backend:** Node.js, Express 5, TypeScript, Zod validation
@@ -15,7 +39,7 @@
 | --- | --- |
 | This README | Features, MongoDB setup, local development, tests, configuration, architecture |
 | [docs/HOSTINGER.md](docs/HOSTINGER.md) | **Step-by-step deployment on Hostinger** (Node.js Web App, settings and environment variables) |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Putting the app on your DewanTech website (subdomain or `/todo/` sub-path), Docker, production checklist |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploying to your own domain (subdomain or sub-path), free email setup, Docker, production checklist |
 | [docs/MOBILE.md](docs/MOBILE.md) | iOS/Android builds, microphone permissions, signing, App Store and Google Play submission requirements |
 
 ## Two ways to run DoNext
@@ -83,6 +107,8 @@ To **run your own server** for real accounts and sync across devices, follow [Mo
 dt_to_do/
 ├─ package.json            npm workspaces + root scripts
 ├─ .env.example            sample server environment
+├─ .github/workflows/      CI: test, build and deploy the live demo to GitHub Pages
+├─ docs/                   deployment, mobile, rebranding guides; README screenshots
 ├─ Dockerfile              single-container production image
 ├─ branding/              source logos: donext-logo.png (app), dewantech-logo.png (company)
 ├─ scripts/generate-icons.mjs   builds all icons, splash screens and in-app logos from branding/
@@ -91,12 +117,12 @@ dt_to_do/
 │  │  ├─ index.ts          entry: env → MongoDB → HTTP server
 │  │  ├─ app.ts            Express app (security middleware, routes, optional static client)
 │  │  ├─ config.ts         validated environment variables
-│  │  ├─ models/           User, Task (Mongoose)
-│  │  ├─ routes/           auth.ts, tasks.ts (CRUD + /sync)
+│  │  ├─ models/           User, Task, List (Mongoose)
+│  │  ├─ routes/           auth.ts, tasks.ts (CRUD + /sync), lists.ts (shared lists, invites)
 │  │  ├─ middleware/       auth (JWT), error handler, zod parsing
-│  │  └─ lib/validation.ts all request schemas
+│  │  └─ lib/              validation (all request schemas), access rules, mailer
 │  ├─ scripts/dev-memory.ts  run the API with a disposable local MongoDB
-│  └─ test/                auth, tasks/privacy/CORS, sync conflict tests
+│  └─ test/                auth, tasks/privacy/CORS, sync conflicts, shared lists and invites
 └─ client/
    ├─ capacitor.config.ts  native app id/name
    ├─ android/, ios/       native projects (open in Android Studio / Xcode)
@@ -104,12 +130,15 @@ dt_to_do/
    ├─ vite.config.ts       PWA manifest + service worker
    ├─ scripts/configure-native.mjs  adds mic/speech permissions to native projects
    ├─ assets/              icon/splash sources for @capacitor/assets
-   ├─ public/              icons, theme bootstrap script
+   ├─ public/              icons, link-preview image, theme bootstrap script
    └─ src/
-      ├─ lib/              api, IndexedDB store, sync engine, filters, speech
+      ├─ lib/              api, demo API, IndexedDB store, sync engine, filters, smart suggestions
+      │                    and date parsing, reminders, sound, speech, calendar export
       ├─ context/          Auth, Tasks, Theme providers
-      ├─ components/       Header, Footer, TaskForm, VoiceInput, TaskItem, FilterBar, Modal…
-      └─ pages/            Tasks, Login/Signup, Account, Privacy, Terms
+      ├─ hooks/            dialogs (focus trap, stacking), online status, clock
+      ├─ components/       TaskItem, TaskForm, VoiceInput, SmartSuggestions, DueDatePicker,
+      │                    SubtaskEditor, ReminderCenter, CalendarDialog, Modal, Header…
+      └─ pages/            Landing, Tasks, Shared lists, Login/Signup, Account, Support, Privacy, Terms
 ```
 
 ## Prerequisites
@@ -129,11 +158,11 @@ Pick one option.
 
 1. Create a free account at <https://www.mongodb.com/cloud/atlas>. *(You need your own account for this.)*
 2. Create a cluster. The free M0 tier is fine to start with; choose a region close to your users and your API host.
-3. Under **Database Access**, add a database user with a strong password and the *Read and write to any database* role. Scoping it to the `dewantech_todo` database is better.
+3. Under **Database Access**, add a database user with a strong password and the *Read and write to any database* role. Scoping it to the `donext` database is better.
 4. Under **Network Access**, add your API server's outbound IP address. During development you can add your own IP. Avoid `0.0.0.0/0` in production unless your host has no static IP.
 5. Click **Connect → Drivers** and copy the connection string. Put it in `server/.env`, adding the database name:
    ```
-   MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/dewantech_todo?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/donext?retryWrites=true&w=majority
    ```
    If the password contains special characters such as `@ : / ? #`, URL-encode them.
 
@@ -144,7 +173,7 @@ Pick one option.
 - **Linux:** follow the official package instructions for your distribution.
 - **Docker:** run `docker run -d -p 27017:27017 --name mongo -v mongo-data:/data/db mongo:7`.
 
-Then set `MONGODB_URI=mongodb://127.0.0.1:27017/dewantech_todo`.
+Then set `MONGODB_URI=mongodb://127.0.0.1:27017/donext`.
 
 ### Option C: Try it with no install
 

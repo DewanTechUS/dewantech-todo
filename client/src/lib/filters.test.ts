@@ -98,6 +98,9 @@ describe('date helpers', () => {
     expect(left('2026-10-16', '09:00')).toEqual({ text: '3 days left', tone: 'later' });
     expect(left('2026-10-13', '09:00')).toEqual({ text: '1 hour overdue', tone: 'overdue' });
     expect(left('2026-10-13', '09:59')).toEqual({ text: '1 min overdue', tone: 'overdue' });
+    expect(left('2026-10-13', '10:00')).toEqual({ text: 'Due now', tone: 'overdue' });
+    // Agrees with isOverdue at the due minute.
+    expect(isOverdue({ dueDate: '2026-10-13', dueTime: '10:00', completed: false }, '2026-10-13', '10:00')).toBe(true);
   });
 
   it('formats today and tomorrow in words', () => {

@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -7,10 +7,45 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const base = env.VITE_BASE_PATH || '/';
 
+  // Link previews (LinkedIn, X, Slack…) need absolute URLs, so the tags are only added
+  // when the site's public address is known, e.g. VITE_SITE_URL=https://example.com/donext
+  const siteUrl = env.VITE_SITE_URL?.replace(/\/+$/, '');
+  const title = 'DoNext: the to-do list you can talk to';
+  const description =
+    'Free, open-source task app: voice input, smart suggestions, reminders, shared lists and offline sync. Try the live demo, no sign-up.';
+  const meta = (attr: 'property' | 'name', key: string, content: string): HtmlTagDescriptor => ({
+    tag: 'meta',
+    attrs: { [attr]: key, content },
+    injectTo: 'head',
+  });
+  const image = `${siteUrl}/og-image.png`;
+  const socialTags: Plugin = {
+    name: 'social-preview-tags',
+    transformIndexHtml: () =>
+      siteUrl
+        ? [
+            meta('property', 'og:type', 'website'),
+            meta('property', 'og:site_name', 'DoNext'),
+            meta('property', 'og:title', title),
+            meta('property', 'og:description', description),
+            meta('property', 'og:url', `${siteUrl}/`),
+            meta('property', 'og:image', image),
+            meta('property', 'og:image:width', '1200'),
+            meta('property', 'og:image:height', '630'),
+            meta('property', 'og:image:alt', 'DoNext on a phone and a computer'),
+            meta('name', 'twitter:card', 'summary_large_image'),
+            meta('name', 'twitter:title', title),
+            meta('name', 'twitter:description', description),
+            meta('name', 'twitter:image', image),
+          ]
+        : [],
+  };
+
   return {
     base,
     plugins: [
       react(),
+      socialTags,
       VitePWA({
         // Registered manually in main.tsx so it can be skipped inside Capacitor native shells.
         injectRegister: null,

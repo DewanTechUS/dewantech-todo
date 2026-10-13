@@ -69,7 +69,10 @@ export function timeLeft(
 
   const [y, mo, d] = task.dueDate.split('-').map(Number);
   const [h, mi] = task.dueTime.split(':').map(Number);
-  const mins = Math.round((new Date(y, mo - 1, d, h, mi).getTime() - now.getTime()) / 60_000);
+  const ms = new Date(y, mo - 1, d, h, mi).getTime() - now.getTime();
+  // The due minute itself: overdue (as isOverdue says), but "1 min overdue" would be early.
+  if (ms <= 0 && ms > -60_000) return { text: 'Due now', tone: 'overdue' };
+  const mins = Math.round(ms / 60_000);
   const abs = Math.abs(mins);
   const amount =
     abs < 60 ? plural(Math.max(abs, 1), 'min') : abs < 24 * 60 ? plural(Math.round(abs / 60), 'hour') : plural(Math.abs(days) || 1, 'day');

@@ -14,7 +14,7 @@ const dbPath = path.resolve(import.meta.dirname, '../.data');
 fs.mkdirSync(dbPath, { recursive: true });
 
 const mongo = await MongoMemoryServer.create({ instance: { dbPath, storageEngine: 'wiredTiger', port: 27018 } });
-process.env.MONGODB_URI = mongo.getUri('dewantech_todo');
+process.env.MONGODB_URI = mongo.getUri('donext');
 process.env.JWT_SECRET ??= 'dev-only-secret-change-me-0123456789abcdef';
 console.log(`Local MongoDB running at ${process.env.MONGODB_URI} (data: ${dbPath})`);
 

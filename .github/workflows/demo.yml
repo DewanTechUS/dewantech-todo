@@ -36,6 +36,9 @@ jobs:
       - name: Test the app
         run: npm test -w client
 
+      - name: Work out the site address (for link previews on LinkedIn, X, Slack…)
+        run: echo "VITE_SITE_URL=https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${{ github.event.repository.name }}" >> "$GITHUB_ENV"
+
       - name: Build the demo
         run: npm run build -w client
         env:

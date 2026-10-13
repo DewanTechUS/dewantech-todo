@@ -49,7 +49,7 @@ Add these in the app's **Environment Variables** section. Never put them in GitH
 | Name | Value |
 | --- | --- |
 | `NODE_ENV` | `production` |
-| `MONGODB_URI` | your Atlas connection string, including your password, e.g. `mongodb+srv://USER:PASSWORD@your-cluster.xxxxx.mongodb.net/dewantech_todo?retryWrites=true&w=majority` |
+| `MONGODB_URI` | your Atlas connection string, including your password, e.g. `mongodb+srv://USER:PASSWORD@your-cluster.xxxxx.mongodb.net/donext?retryWrites=true&w=majority` |
 | `JWT_SECRET` | a new long random value (see below) |
 | `JWT_EXPIRES_IN` | `7d` |
 | `SERVE_CLIENT` | `true` |

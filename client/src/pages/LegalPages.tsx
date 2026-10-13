@@ -31,7 +31,81 @@ function DraftNotice() {
   );
 }
 
+/**
+ * The live demo has no server: nothing leaves the visitor's browser. Its policies are short,
+ * complete and specific to that. The full policies (below) apply to a hosted version.
+ */
+function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
+  return (
+    <article className="prose-page mx-auto max-w-3xl">
+      <h1 className="mb-1 text-3xl font-bold tracking-tight">{kind === 'privacy' ? 'Privacy Policy' : 'Terms of Use'}</h1>
+      <p className="text-sm">For the DoNext live demo · {COMPANY_LEGAL_NAME}</p>
+
+      {kind === 'privacy' ? (
+        <>
+          <h2>The short version</h2>
+          <p>
+            This demo runs entirely in your browser. Nothing you type, including accounts, tasks, lists and settings, is sent to
+            DewanTech or to any server. We don't use cookies, analytics, ads or tracking.
+          </p>
+          <h2>What is stored, and where</h2>
+          <ul>
+            <li>Demo accounts, tasks, lists and reminder settings are saved in this browser's storage (localStorage and IndexedDB) on your device.</li>
+            <li>Passwords you choose in the demo are stored only as a SHA-256 hash, and only in your browser.</li>
+            <li>To delete everything, log out and clear this site's data in your browser settings.</li>
+          </ul>
+          <h2>Microphone and voice</h2>
+          <p>
+            If you use voice input, your browser asks for microphone permission. Speech recognition is provided by your browser or
+            operating system (for example Google in Chrome, Apple in Safari) under their own privacy policies. DoNext only receives the
+            resulting text. Reading reminders aloud uses your device's built-in voice.
+          </p>
+          <h2>Hosting</h2>
+          <p>
+            The demo's files are served by GitHub Pages, which, like any web host, may log basic request information such as IP
+            addresses. See GitHub's privacy statement for details.
+          </p>
+          <h2>Contact</h2>
+          <p>
+            Questions: <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2>A demo, provided as is</h2>
+          <p>
+            This live demo lets you try DoNext for free, with no sign-up. It's provided <strong>as is</strong>, without warranties
+            of any kind. Data lives only in your browser and can be lost at any time (for example when you clear your browser data),
+            so please don't rely on it for anything important.
+          </p>
+          <h2>Acceptable use</h2>
+          <p>Please don't use the demo to break the law or to attack, overload or misuse the site.</p>
+          <h2>Open-source code and our name</h2>
+          <p>
+            DoNext's code is open source under the <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT License</a>. The DoNext and
+            DewanTech™ names and logos are not covered by that license; see the{' '}
+            <a href={`${REPO_URL}/blob/main/TRADEMARKS.md`}>Trademark Policy</a>.
+          </p>
+          <h2>Limitation of liability</h2>
+          <p>
+            To the fullest extent permitted by law, {COMPANY_LEGAL_NAME} is not liable for any loss arising from your use of this free
+            demo.
+          </p>
+          <h2>Contact</h2>
+          <p>
+            Questions: <a href={`mailto:${LEGAL.supportEmail}`}>{LEGAL.supportEmail}</a>.
+          </p>
+        </>
+      )}
+      <p className="mt-8 text-sm">
+        <Link to="/">Back to DoNext</Link>
+      </p>
+    </article>
+  );
+}
+
 export function PrivacyPage() {
+  if (IS_DEMO) return <DemoLegal kind="privacy" />;
   return (
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Privacy Policy</h1>
@@ -173,6 +247,7 @@ export function PrivacyPage() {
 }
 
 export function TermsPage() {
+  if (IS_DEMO) return <DemoLegal kind="terms" />;
   return (
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Terms of Service</h1>
