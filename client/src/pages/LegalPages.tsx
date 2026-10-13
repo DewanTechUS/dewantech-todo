@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { IS_DEMO } from '../lib/api';
-import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, type LegalField } from '../lib/brand';
+import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, REPO_URL, type LegalField } from '../lib/brand';
 
 /**
  * Highlighted placeholder. Business details come from LEGAL in lib/brand.ts — fill them in there.
@@ -200,6 +200,17 @@ export function TermsPage() {
       <p>
         You own the tasks and other content you create. You grant DewanTech a limited licence to store, process and transmit that
         content solely to provide the App to you.
+      </p>
+
+      <h2>Trademarks and open-source code</h2>
+      <p>
+        The App’s source code is available under the MIT License. That licence covers the code only. “DoNext”, “DewanTech™”, their
+        logos and the slogan “Technology Built with Purpose.” are trademarks of Dewan Global LLC and may not be used to name, brand or
+        promote any other product or service without written permission. See the{' '}
+        <a href={`${REPO_URL}/blob/main/TRADEMARKS.md`} rel="noopener" className="underline">
+          Trademark Policy
+        </a>
+        .
       </p>
 
       <h2>Acceptable use</h2>

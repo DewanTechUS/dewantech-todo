@@ -302,4 +302,11 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 
 You're free to use, copy, modify and share this code, including in your own projects, as long as you keep the copyright notice. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The **DoNext** and **DewanTech™** names and logos identify the original project. If you publish your own version, please give it your own name and logo.
+### Name and brand: not included in the MIT License
+
+**DoNext**, **DewanTech™**, their logos and the slogan "Technology Built with Purpose." are trademarks of Dewan Global LLC and are **not** licensed for reuse.
+
+- ✅ You may build and publish your own app from this code, **under your own name and logo**.
+- ❌ You may not use the DoNext or DewanTech™ names, logos or branding for your version, or suggest it's made or endorsed by DewanTech™.
+
+See the [Trademark Policy](TRADEMARKS.md), and the [Rebranding guide](docs/REBRANDING.md) for switching to your own brand in a few minutes.
