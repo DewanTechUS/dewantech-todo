@@ -339,7 +339,7 @@ DoNext was designed and built by **Dewan Mahmud**, founder of **DewanTech™** (
 
 - 💼 LinkedIn: [linkedin.com/in/dewan-mahmud-a579a0265](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
 - 🌐 Website: [dewantech.com](https://dewantech.com)
-- ✉️ Email: [info@dewantech.com](mailto:info@dewantech.com)
+- ✉️ Email: [dewan.swe@gmail.com](mailto:dewan.swe@gmail.com)
 
 Feedback, ideas and opportunities are welcome.
 
