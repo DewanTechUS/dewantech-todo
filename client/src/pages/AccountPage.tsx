@@ -1,3 +1,4 @@
+import { ReminderSettingsSection } from '../components/ReminderSettings';
 import { useId, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../components/Alert';
@@ -64,6 +65,7 @@ export default function AccountPage() {
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
       <ProfileSection />
+      <ReminderSettingsSection />
       <PasswordSection />
       <DataSection />
 

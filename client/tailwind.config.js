@@ -29,9 +29,16 @@ export default {
           '0%, 100%': { transform: 'scaleY(0.35)' },
           '50%': { transform: 'scaleY(1)' },
         },
+        ring: {
+          '0%, 100%': { transform: 'rotate(0)' },
+          '20%, 60%': { transform: 'rotate(-14deg)' },
+          '40%, 80%': { transform: 'rotate(14deg)' },
+        },
       },
       animation: {
         wave: 'wave 0.9s ease-in-out infinite',
+        // A ringing bell for reminders.
+        ring: 'ring 0.8s ease-in-out 2',
         // Calmer than Tailwind's default 1s spin for loading indicators.
         'spin-slow': 'spin 1.5s linear infinite',
       },

@@ -6,6 +6,7 @@ import { REPO_URL } from '../lib/brand';
 import { Alert } from './Alert';
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { ReminderCenter } from './ReminderCenter';
 
 export function Layout() {
   const { status, sessionExpired } = useAuth();
@@ -46,6 +47,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      {status === 'authenticated' && <ReminderCenter />}
     </div>
   );
 }

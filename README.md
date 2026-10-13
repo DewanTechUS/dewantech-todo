@@ -51,6 +51,7 @@ To **run your own server** for real accounts and sync across devices, follow [Mo
   - The owner can rename the list, invite or remove people, or delete it; members can leave.
   - Tabs: Personal, each shared list, and All. A red badge shows pending invitations.
 - **Privacy:** personal tasks are visible only to their creator; shared-list tasks only to that list's members. Nobody else can read or change them (covered by tests). Each account also gets its own offline database on the device, and that database is erased when you log out.
+- **Sound and read-aloud reminders:** while DoNext is open (a background tab is fine), a task's reminder plays a sound (Chime, Bell or Beep, generated in the browser with no audio files) and can read the task aloud with the device's voice ("Reminder. Pay rent is due now."). A card offers **Mark done** and **Snooze 10 min**, and a system notification can appear when the tab is in the background. Choose the timing (at the due time, or 10, 30 or 60 minutes before), the sound and read-aloud in **Account → Reminders**, which also has a **Test reminder** button. These settings are saved per device.
 - **Calendar reminders:** the 📅 button on a task adds it to **Google Calendar** (opens pre-filled) or to **Apple Calendar or Outlook** (a standard .ics file with the reminder built in). You pick the date, time and when to be reminded, and the calendar app sends the notification. The dialog **detects the device** and offers its calendar first: Apple Calendar on iPhone, iPad and Mac, Google Calendar on Android, and Outlook or Windows Calendar on Windows. The other options stay available. It works on iPhone, Android and desktop with no server or push setup.
 - **Voice input:**
   - A microphone button turns speech into text.
@@ -192,7 +193,7 @@ Other useful commands:
 npm test
 ```
 
-There are 130 tests.
+There are 137 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.

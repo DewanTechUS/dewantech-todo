@@ -89,6 +89,10 @@
 .safe-pb-6 {
   padding-bottom: calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
 }
+/* Floating cards at the bottom of the screen (reminders). */
+.safe-pb-3 {
+  padding-bottom: calc(0.75rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
 /* Phones in landscape: keep content clear of the notch / camera cut-out. */
 .safe-x {
   padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
