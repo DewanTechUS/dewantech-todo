@@ -76,7 +76,7 @@ interface CalendarDialogProps {
 /** Lets the user add a task to their calendar with a reminder — their device's calendar is offered first. */
 export function CalendarDialog({ task, onClose, platform = currentPlatform() }: CalendarDialogProps) {
   const [date, setDate] = useState(task.dueDate ?? todayISO());
-  const [time, setTime] = useState(() => defaultTime(task.dueDate ?? todayISO()));
+  const [time, setTime] = useState(() => (task.dueDate && task.dueTime) || defaultTime(task.dueDate ?? todayISO()));
   const [reminder, setReminder] = useState(30);
   const [showOthers, setShowOthers] = useState(false);
   const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);

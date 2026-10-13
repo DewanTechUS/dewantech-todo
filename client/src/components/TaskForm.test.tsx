@@ -28,14 +28,24 @@ describe('TaskForm', () => {
     await user.type(screen.getByLabelText(/due date/i), '2026-12-24');
     await user.selectOptions(screen.getByLabelText(/priority/i), 'high');
     await user.type(screen.getByLabelText(/category/i), 'Work');
+    await user.type(screen.getByLabelText(/^time/i), '17:30');
+    await user.type(screen.getByLabelText('New sub-item'), 'Write notes{Enter}');
+    await user.type(screen.getByLabelText('New sub-item'), 'Tag build');
+    await user.click(screen.getByRole('button', { name: /^add$/i }));
+    await user.click(screen.getByLabelText('Mark sub-item 1 as done'));
     await user.click(screen.getByRole('button', { name: 'Add task' }));
     expect(onSubmit).toHaveBeenCalledWith({
       title: 'Ship release',
       description: 'v1.0',
       dueDate: '2026-12-24',
+      dueTime: '17:30',
       priority: 'high',
       category: 'Work',
       completed: false,
+      subtasks: [
+        { id: expect.any(String), title: 'Write notes', done: true },
+        { id: expect.any(String), title: 'Tag build', done: false },
+      ],
       listId: null,
       assigneeId: null,
     });

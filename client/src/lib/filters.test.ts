@@ -10,9 +10,11 @@ const task = (overrides: Partial<Task>): Task => {
     title: `Task ${n}`,
     description: '',
     dueDate: null,
+    dueTime: null,
     priority: 'medium',
     category: '',
     completed: false,
+    subtasks: [],
     createdAt: new Date(2026, 0, n).toISOString(),
     updatedAt: new Date(2026, 0, n).toISOString(),
     deletedAt: null,
@@ -61,6 +63,23 @@ describe('date helpers', () => {
     expect(isOverdue({ dueDate: '2026-10-01', completed: false }, '2026-10-01')).toBe(false);
     expect(isOverdue({ dueDate: '2026-09-30', completed: true }, '2026-10-01')).toBe(false);
     expect(isOverdue({ dueDate: null, completed: false }, '2026-10-01')).toBe(false);
+  });
+
+  it('counts a task due earlier today as overdue once its time has passed', () => {
+    const t = { dueDate: '2026-10-01', dueTime: '14:00', completed: false };
+    expect(isOverdue(t, '2026-10-01', '13:59')).toBe(false);
+    expect(isOverdue(t, '2026-10-01', '14:00')).toBe(true);
+    expect(isOverdue({ ...t, dueTime: null }, '2026-10-01', '23:59')).toBe(false);
+  });
+
+  it('sorts by time within a day (timed tasks first) and searches sub-items', () => {
+    const late = task({ title: 'late', dueDate: '2026-10-05', dueTime: '18:00' });
+    const early = task({ title: 'early', dueDate: '2026-10-05', dueTime: '08:00' });
+    const allDay = task({ title: 'all day', dueDate: '2026-10-05' });
+    expect(filterTasks([allDay, late, early], defaultFilters).map((t) => t.title)).toEqual(['early', 'late', 'all day']);
+
+    const groceries = task({ title: 'Groceries', subtasks: [{ id: 'a', title: 'Oat milk', done: false }] });
+    expect(filterTasks([groceries, late], { ...defaultFilters, query: 'oat' })).toEqual([groceries]);
   });
 
   it('formats today and tomorrow in words', () => {

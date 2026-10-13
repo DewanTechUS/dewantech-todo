@@ -52,14 +52,26 @@ const calendarDate = z
     return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(s);
   }, 'Invalid due date');
 
+const clockTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must be HH:MM');
+
+const subtaskSchema = z
+  .object({
+    id: z.string().min(1).max(64),
+    title: z.string().trim().min(1, 'Sub-items need a title').max(200, 'Sub-items must be at most 200 characters'),
+    done: z.boolean().default(false),
+  })
+  .strict();
+
 export const taskFieldsSchema = z
   .object({
     title: z.string().trim().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
     description: z.string().max(2000, 'Description must be at most 2000 characters').default(''),
     dueDate: calendarDate.nullable().default(null),
+    dueTime: clockTime.nullable().default(null),
     priority: z.enum(PRIORITIES).default('medium'),
     category: z.string().trim().max(50, 'Category must be at most 50 characters').default(''),
     completed: z.boolean().default(false),
+    subtasks: z.array(subtaskSchema).max(50, 'A task can have at most 50 sub-items').default([]),
     listId: z.string().uuid('Invalid list').nullable().default(null),
     assigneeId: objectId.nullable().default(null),
   })

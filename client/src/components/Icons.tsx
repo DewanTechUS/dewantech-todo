@@ -180,3 +180,20 @@ export const BellIcon = (p: P) => (
     <path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0" />
   </svg>
 );
+export const ClockIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+);
+export const TagIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z" />
+    <circle cx="7.5" cy="7.5" r="1.5" />
+  </svg>
+);
+export const FlagIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 22V4M4 4h12l-2 4 2 4H4" />
+  </svg>
+);

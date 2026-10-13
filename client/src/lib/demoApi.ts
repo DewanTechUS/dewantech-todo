@@ -431,9 +431,11 @@ export function createDemoApi(): Api {
           title,
           description: '',
           dueDate: null,
+          dueTime: null,
           priority: 'medium',
           category: '',
           completed: false,
+          subtasks: [],
           listId: null,
           assigneeId: null,
           createdBy: guest.id,
@@ -446,9 +448,26 @@ export function createDemoApi(): Api {
           task('Try adding a task with the microphone 🎙️', { priority: 'high', category: 'Getting started', dueDate: day(0) }),
           task('Renew library books', { category: 'Personal', dueDate: day(-1) }),
           task('Plan next week', { category: 'Personal', dueDate: day(3), priority: 'low' }),
+          task('Buy groceries', {
+            category: 'Home',
+            dueDate: day(0),
+            dueTime: '18:00',
+            subtasks: [
+              { id: uuid(), title: 'Milk', done: true },
+              { id: uuid(), title: 'Eggs', done: false },
+              { id: uuid(), title: 'Bread', done: false },
+            ],
+          }),
           task('Read the DoNext README on GitHub', { category: 'Getting started', completed: true }),
-          task('Book the cabin', { listId: list.id, priority: 'high', dueDate: day(2), assigneeId: guest.id, createdBy: alex.id }),
-          task('Pack snacks and water', { listId: list.id, assigneeId: alex.id }),
+          task('Book the cabin', { listId: list.id, priority: 'high', dueDate: day(2), dueTime: '10:00', assigneeId: guest.id, createdBy: alex.id }),
+          task('Pack snacks and water', {
+            listId: list.id,
+            assigneeId: alex.id,
+            subtasks: [
+              { id: uuid(), title: 'Trail mix', done: false },
+              { id: uuid(), title: 'Water bottles', done: false },
+            ],
+          }),
         );
         return session(guest);
       }),

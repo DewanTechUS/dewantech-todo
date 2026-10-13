@@ -1,14 +1,25 @@
 export const PRIORITIES = ['low', 'medium', 'high'] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
+/** One item of a task's checklist. */
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 export interface TaskFields {
   title: string;
   description: string;
   /** Calendar date, YYYY-MM-DD */
   dueDate: string | null;
+  /** Local time HH:MM (only with a due date). */
+  dueTime: string | null;
   priority: Priority;
   category: string;
   completed: boolean;
+  /** Checklist of sub-items. */
+  subtasks: Subtask[];
   /** Shared list the task belongs to; null = my private personal task. */
   listId: string | null;
   /** List member the task is assigned to (shared-list tasks only). */

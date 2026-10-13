@@ -9,9 +9,11 @@ const fields = (title: string, extra: object = {}) => ({
   title,
   description: '',
   dueDate: null,
+  dueTime: null,
   priority: 'medium',
   category: '',
   completed: false,
+  subtasks: [],
   ...extra,
 });
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();

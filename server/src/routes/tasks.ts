@@ -108,7 +108,7 @@ export function tasksRouter(config: Config): Router {
     if (category) filter.category = category;
     if (q?.trim()) {
       const rx = new RegExp(escapeRegex(q.trim()), 'i');
-      and.push({ $or: [{ title: rx }, { description: rx }, { category: rx }] });
+      and.push({ $or: [{ title: rx }, { description: rx }, { category: rx }, { 'subtasks.title': rx }] });
     }
     if (and.length) filter.$and = and;
     const tasks = await Task.find(filter).sort({ completed: 1, dueDate: 1, createdAt: -1 }).lean<TaskAttrs[]>();

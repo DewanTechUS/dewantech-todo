@@ -32,15 +32,23 @@ const pickFields = (t: TaskFields): TaskFields => ({
   title: t.title.trim(),
   description: t.description,
   dueDate: t.dueDate || null,
+  dueTime: (t.dueDate && t.dueTime) || null,
   priority: t.priority,
   category: t.category.trim(),
   completed: t.completed,
+  subtasks: (t.subtasks ?? [])
+    .map((s) => ({ id: s.id, title: s.title.trim(), done: Boolean(s.done) }))
+    .filter((s) => s.title)
+    .slice(0, 50),
   listId: t.listId ?? null,
   // Only shared-list tasks can be assigned.
   assigneeId: t.listId ? (t.assigneeId ?? null) : null,
 });
 
-const parseJSON = <T,>(raw: string | null, fallback: T): T => {
+/** Fills in fields added after a task was stored (older tasks have no time or sub-items). */
+export const withDefaults = (t: Task): Task => ({ ...t, dueTime: t.dueTime ?? null, subtasks: t.subtasks ?? [] });
+
+const parseJSON =<T,>(raw: string | null, fallback: T): T => {
   try {
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
@@ -104,7 +112,7 @@ export class TaskStore {
       this.deps.store.getMeta('lists'),
       this.deps.store.getMeta('invites'),
     ]);
-    this.tasks = tasks;
+    this.tasks = tasks.map(withDefaults);
     this.lists = parseJSON<SharedList[]>(lists, []);
     this.invites = parseJSON<ListInvite[]>(invites, []);
     this.state = { ...this.state, pending, lastSyncedAt, status: this.isOnline() ? 'idle' : 'offline' };
@@ -122,7 +130,8 @@ export class TaskStore {
   }
 
   async update(id: string, patch: Partial<TaskFields>): Promise<Task> {
-    const existing = this.tasks.find((t) => t.id === id) ?? (await this.deps.store.getTask(id));
+    const found = this.tasks.find((t) => t.id === id) ?? (await this.deps.store.getTask(id));
+    const existing = found && withDefaults(found);
     if (!existing) throw new Error('This task no longer exists. It may have been deleted on another device.');
     const ts = this.now.toISOString();
     const data = pickFields({ ...existing, ...patch });
@@ -143,6 +152,12 @@ export class TaskStore {
   toggle(id: string) {
     const t = this.tasks.find((x) => x.id === id);
     return this.update(id, { completed: !t?.completed });
+  }
+
+  toggleSubtask(id: string, subtaskId: string) {
+    const t = this.tasks.find((x) => x.id === id);
+    const subtasks = (t?.subtasks ?? []).map((s) => (s.id === subtaskId ? { ...s, done: !s.done } : s));
+    return this.update(id, { subtasks });
   }
 
   async remove(id: string) {
@@ -213,7 +228,7 @@ export class TaskStore {
       }
 
       const rejected = res.results.filter((r) => r.status === 'rejected');
-      this.tasks = await store.getTasks();
+      this.tasks = (await store.getTasks()).map(withDefaults);
       this.setState({
         status: 'idle',
         pending: await store.countOutbox(),

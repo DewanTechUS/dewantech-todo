@@ -22,8 +22,37 @@ export function todayISO(now = new Date()): string {
   return `${now.getFullYear()}-${m}-${d}`;
 }
 
-export function isOverdue(task: Pick<Task, 'dueDate' | 'completed'>, today = todayISO()): boolean {
-  return !task.completed && !!task.dueDate && task.dueDate < today;
+/** Local time as HH:MM. */
+export function nowTime(now = new Date()): string {
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+/** Past its due date, or due earlier today at a time that has passed. */
+export function isOverdue(
+  task: Pick<Task, 'dueDate' | 'completed'> & { dueTime?: string | null },
+  today = todayISO(),
+  time = nowTime(),
+): boolean {
+  if (task.completed || !task.dueDate) return false;
+  return task.dueDate < today || (task.dueDate === today && !!task.dueTime && task.dueTime <= time);
+}
+
+/** "15:30" → "3:30 PM" (in the user's locale). */
+export function formatTime(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+/** e.g. "Oct 12, 3:04 PM" (the year is added when it isn't this year). */
+export function formatTimestamp(iso: string, now = new Date()): string {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}),
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function formatDueDate(dueDate: string, today = todayISO()): string {
@@ -56,15 +85,17 @@ export function filterTasks(tasks: Task[], f: TaskFilters): Task[] {
     if (f.status === 'completed' && !t.completed) return false;
     if (f.priority !== 'all' && t.priority !== f.priority) return false;
     if (f.category && t.category.toLowerCase() !== f.category.toLowerCase()) return false;
-    if (q && !`${t.title}\n${t.description}\n${t.category}`.toLowerCase().includes(q)) return false;
+    const subtasks = (t.subtasks ?? []).map((s) => s.title).join('\n');
+    if (q && !`${t.title}\n${t.description}\n${t.category}\n${subtasks}`.toLowerCase().includes(q)) return false;
     return true;
   });
 
   const byDue = (a: Task, b: Task) => {
-    if (a.dueDate === b.dueDate) return 0;
-    if (!a.dueDate) return 1; // undated last
-    if (!b.dueDate) return -1;
-    return a.dueDate < b.dueDate ? -1 : 1;
+    if (!a.dueDate !== !b.dueDate) return a.dueDate ? -1 : 1; // undated last
+    // Within a day, tasks with a time come first, earliest first.
+    const ka = a.dueDate ? `${a.dueDate} ${a.dueTime ?? '~'}` : '';
+    const kb = b.dueDate ? `${b.dueDate} ${b.dueTime ?? '~'}` : '';
+    return ka === kb ? 0 : ka < kb ? -1 : 1;
   };
   const byNewest = (a: Task, b: Task) => b.createdAt.localeCompare(a.createdAt);
   const byPriority = (a: Task, b: Task) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];

@@ -71,6 +71,45 @@ describe('tasks CRUD', () => {
     expect(res.status).toBe(400);
   });
 
+  it('stores a due time and sub-items, and finds tasks by sub-item', async () => {
+    const auth = await authed();
+    const subtasks = [
+      { id: 's1', title: ' Milk ', done: true },
+      { id: 's2', title: 'Eggs', done: false },
+    ];
+    const created = await request(app())
+      .post('/api/tasks')
+      .set(auth)
+      .send({ title: 'Groceries', dueDate: '2026-12-01', dueTime: '18:30', subtasks });
+    expect(created.status).toBe(201);
+    expect(created.body.task).toMatchObject({
+      dueTime: '18:30',
+      subtasks: [
+        { id: 's1', title: 'Milk', done: true },
+        { id: 's2', title: 'Eggs', done: false },
+      ],
+    });
+
+    const id = created.body.task.id;
+    const patched = await request(app())
+      .patch(`/api/tasks/${id}`)
+      .set(auth)
+      .send({ subtasks: [{ id: 's2', title: 'Eggs', done: true }] });
+    expect(patched.body.task.subtasks).toEqual([{ id: 's2', title: 'Eggs', done: true }]);
+
+    const found = await request(app()).get('/api/tasks').query({ q: 'eggs' }).set(auth);
+    expect(found.body.tasks.map((t: { id: string }) => t.id)).toEqual([id]);
+
+    for (const body of [
+      { title: 'ok', dueDate: '2026-12-01', dueTime: '25:00' },
+      { title: 'ok', subtasks: [{ id: 'a', title: '   ' }] },
+      { title: 'ok', subtasks: [{ id: 'a', title: 'x', extra: 1 }] },
+      { title: 'ok', subtasks: Array.from({ length: 51 }, (_, i) => ({ id: `s${i}`, title: 'x' })) },
+    ]) {
+      expect((await request(app()).post('/api/tasks').set(auth).send(body)).status, JSON.stringify(body).slice(0, 80)).toBe(400);
+    }
+  });
+
   it("keeps each user's tasks private", async () => {
     const alice = await authed();
     const bob = await authed();

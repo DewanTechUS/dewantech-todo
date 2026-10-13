@@ -9,9 +9,11 @@ const fields = (title: string, extra: Partial<TaskFields> = {}): TaskFields => (
   title,
   description: '',
   dueDate: null,
+  dueTime: null,
   priority: 'medium',
   category: '',
   completed: false,
+  subtasks: [],
   listId: null,
   assigneeId: null,
   ...extra,
@@ -79,6 +81,34 @@ describe('TaskStore (offline-first)', () => {
     await ts.syncNow();
     expect(ts.state).toMatchObject({ status: 'idle', pending: 0, error: null });
     expect(server.tasks.get(task.id)?.title).toBe('Offline task');
+  });
+
+  it('ticks a sub-item and syncs the checklist', async () => {
+    const { ts, server } = await setup();
+    const t = await ts.create({
+      ...fields('Groceries'),
+      dueDate: null,
+      dueTime: '09:00', // dropped: a time needs a date
+      subtasks: [
+        { id: 'a', title: 'Milk', done: false },
+        { id: 'b', title: '  ', done: false }, // blank items are dropped
+      ],
+    });
+    expect(t.dueTime).toBeNull();
+    expect(t.subtasks).toEqual([{ id: 'a', title: 'Milk', done: false }]);
+
+    await ts.toggleSubtask(t.id, 'a');
+    await ts.syncNow();
+    expect(server.tasks.get(t.id)?.subtasks).toEqual([{ id: 'a', title: 'Milk', done: true }]);
+  });
+
+  it('fills in time and sub-items for tasks saved before they existed', async () => {
+    const { ts, store } = await setup();
+    const t = await ts.create(fields('Old task'));
+    const { dueTime: _t, subtasks: _s, ...legacy } = t;
+    await store.applySync([], [legacy as Task], new Date().toISOString()); // as an older version stored it
+    await ts.init();
+    expect(ts.tasks.find((x) => x.id === t.id)).toMatchObject({ dueTime: null, subtasks: [] });
   });
 
   it('coalesces multiple offline edits to one task into a single change', async () => {

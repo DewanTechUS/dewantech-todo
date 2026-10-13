@@ -175,6 +175,7 @@ export default function TasksPage() {
                 addedBy={task.createdBy && task.createdBy !== user.id ? person(list, task.createdBy) : undefined}
                 assignee={person(list, task.assigneeId)}
                 onToggle={() => void run(() => store.toggle(task.id))}
+                onToggleSubtask={(sid) => void run(() => store.toggleSubtask(task.id, sid))}
                 onEdit={() => setEditing(task)}
                 onCalendar={() => setScheduling(task)}
                 onDelete={canDelete(task, user.id, listsById) ? () => setDeleting(task) : undefined}

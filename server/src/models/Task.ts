@@ -3,6 +3,12 @@ import mongoose, { Schema, type InferSchemaType } from 'mongoose';
 export const PRIORITIES = ['low', 'medium', 'high'] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 /**
  * Task ids are UUIDs generated on the client so tasks can be created offline
  * and synchronised later without id remapping.
@@ -18,9 +24,15 @@ const taskSchema = new Schema(
     title: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, default: '', maxlength: 2000 },
     dueDate: { type: String, default: null }, // YYYY-MM-DD (timezone-free calendar date)
+    dueTime: { type: String, default: null }, // HH:MM local time, only with a dueDate
     priority: { type: String, enum: PRIORITIES, default: 'medium' },
     category: { type: String, default: '', trim: true, maxlength: 50 },
     completed: { type: Boolean, default: false },
+    /** Checklist of sub-items. */
+    subtasks: {
+      type: [{ _id: false, id: String, title: { type: String, maxlength: 200 }, done: Boolean }],
+      default: [],
+    },
     /** Shared list this task belongs to; null = the creator's private personal task. */
     listId: { type: String, default: null },
     /** List member the task is assigned to (shared-list tasks only). */
@@ -45,9 +57,11 @@ export interface TaskDTO {
   title: string;
   description: string;
   dueDate: string | null;
+  dueTime: string | null;
   priority: Priority;
   category: string;
   completed: boolean;
+  subtasks: Subtask[];
   listId: string | null;
   assigneeId: string | null;
   /** Who created the task. */
@@ -63,9 +77,11 @@ export function toTaskDTO(t: TaskAttrs): TaskDTO {
     title: t.title,
     description: t.description ?? '',
     dueDate: t.dueDate ?? null,
+    dueTime: t.dueDate ? (t.dueTime ?? null) : null,
     priority: t.priority as Priority,
     category: t.category ?? '',
     completed: Boolean(t.completed),
+    subtasks: (t.subtasks ?? []).map((s) => ({ id: String(s.id), title: s.title ?? '', done: Boolean(s.done) })),
     listId: t.listId ?? null,
     assigneeId: t.assignee ? String(t.assignee) : null,
     createdBy: String(t.user),
